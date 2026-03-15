@@ -1,0 +1,5 @@
+@import "tailwindcss" source(none);
+
+@source "./src/Views/**/*.php";
+@source "./public/**/*.php";
+@source "./public/**/*.html";

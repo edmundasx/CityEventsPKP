@@ -1,0 +1,1197 @@
+@import "tailwindcss";
+@source inline("events-grid");
+
+@theme {
+    --color-brand: #ff6b35; /* single global token */
+}
+
+@layer components {
+    .container-ce {
+        @apply mx-auto max-w-6xl px-4;
+    }
+
+    .section {
+        @apply pb-16;
+    }
+    .section-pad {
+        @apply py-10;
+    }
+    .section-head {
+        @apply flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between;
+    }
+    .section-title {
+        @apply text-2xl font-extrabold text-slate-900;
+    }
+    .section-subtitle {
+        @apply mt-1 text-slate-600;
+    }
+    .section-action {
+        @apply mt-3 inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold
+               border border-slate-300 text-slate-800 hover:border-brand hover:text-brand transition sm:mt-0;
+    }
+
+    /* hero */
+    .hero {
+        @apply relative overflow-hidden bg-brand text-white min-h-[34rem];
+    }
+    .hero-inner {
+        @apply relative z-10 flex min-h-[34rem] items-center justify-center py-14;
+    }
+    .hero-content {
+        @apply mx-auto max-w-2xl text-center;
+    }
+    .hero-title {
+        @apply text-3xl font-extrabold leading-tight md:text-5xl;
+    }
+    .hero-lead {
+        @apply mt-4 text-white/90 md:text-lg;
+    }
+
+    .home-hero-map-bg {
+        @apply absolute inset-0 z-0 h-full w-full;
+    }
+    .home-hero-map-bg .leaflet-control-container {
+        @apply opacity-90;
+    }
+    /* hero glow (no Tailwind arbitrary in PHP) */
+    .hero-glow {
+        pointer-events: none;
+        @apply absolute inset-0 z-[1] opacity-35 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.12),rgba(0,0,0,0.58)_68%)];
+    }
+
+    /* search */
+    .search-wrap {
+        @apply mx-auto mt-8 max-w-3xl;
+    }
+    .search-bar {
+        @apply flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+    }
+    .search-input {
+        @apply w-full rounded-xl bg-white/90 px-4 py-3 text-slate-900 placeholder:text-slate-500
+               outline-none ring-0 focus:ring-4 focus:ring-white/30;
+    }
+    .search-btn {
+        @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition;
+    }
+    /* categories */
+    .cats-grid,
+    .categories-content {
+        @apply grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6;
+    }
+    .cat-btn,
+    .category {
+        @apply flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left
+               font-semibold text-slate-800 hover:border-brand hover:text-brand transition;
+    }
+    .category {
+        @apply cursor-pointer select-none;
+    }
+    .cat-icon,
+    .category-icon {
+        @apply text-xl;
+    }
+    .cat-label,
+    .category-label {
+        @apply text-sm;
+    }
+    .cat-btn.is-active,
+    .category.is-active {
+        @apply border-brand bg-brand text-white;
+    }
+    .home-map-popup-title {
+        @apply font-semibold text-slate-900;
+    }
+    .home-map-popup-meta {
+        @apply text-xs text-slate-600;
+    }
+    .home-map-popup-link {
+        @apply mt-2 inline-block text-xs font-semibold text-brand;
+    }
+
+    /* cards & grids */
+    .card {
+        @apply rounded-2xl border border-slate-200 bg-white;
+    }
+    .card-pad {
+        @apply p-6;
+    }
+    .muted {
+        @apply text-slate-600;
+    }
+    /* layout */
+    .container-ce {
+        @apply mx-auto max-w-6xl px-4;
+    }
+
+    /* header */
+    .site-header {
+        @apply sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200;
+    }
+    .header-row {
+        @apply flex h-16 items-center justify-between gap-4;
+    }
+    .logo {
+        @apply text-xl font-extrabold text-brand no-underline;
+    }
+    .nav {
+        @apply hidden md:flex items-center gap-6 text-sm font-semibold;
+    }
+    .nav-link {
+        @apply text-slate-700 hover:text-brand transition no-underline;
+    }
+
+    /* buttons */
+    .btn {
+        @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition;
+    }
+
+    .btn-primary {
+        @apply bg-brand text-white hover:bg-brand/90 shadow-sm;
+    }
+
+    .btn-outline {
+        @apply border border-slate-300 text-slate-800 hover:border-brand hover:text-brand;
+    }
+
+    /* footer */
+    .site-footer {
+        @apply mt-16 bg-white border-t border-slate-200;
+    }
+    .footer-row {
+        @apply py-6 flex flex-col md:flex-row items-center justify-between gap-2;
+    }
+    .footer-text {
+        @apply text-sm text-slate-500;
+    }
+    .footer-links {
+        @apply flex gap-4 text-sm;
+    }
+    .footer-link {
+        @apply text-slate-500 hover:text-brand transition-colors no-underline;
+    }
+
+    .events-grid {
+        @apply grid grid-cols-1 gap-6 items-stretch
+             sm:grid-cols-2
+             lg:grid-cols-3;
+    }
+    .event-card {
+        @apply block overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg;
+    }
+    .event-media {
+        @apply relative h-48 w-full overflow-hidden bg-slate-200;
+    }
+    .event-image {
+        @apply h-full w-full object-cover;
+    }
+    .event-content {
+        @apply p-4;
+    }
+    .event-title {
+        @apply text-base font-semibold text-slate-900;
+    }
+    .event-price {
+        @apply absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow;
+    }
+    .event-meta {
+        @apply mt-2 space-y-1 text-sm text-slate-600;
+    }
+    .event-datetime {
+        @apply text-slate-700;
+    }
+    .event-location {
+        @apply text-slate-500;
+    }
+    .events-empty {
+        @apply rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500;
+    }
+    .event-image--placeholder {
+        @apply h-full w-full bg-slate-200;
+    }
+
+    .header-actions {
+        @apply flex items-center gap-2;
+    }
+
+    .footer-container {
+        @apply max-w-[1200px] mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-2;
+    }
+
+    /* event details page */
+    .event-page {
+        @apply bg-[#090a0d] text-slate-200 py-8 pb-16;
+    }
+    .event-page-inner {
+        @apply mx-auto max-w-6xl px-4;
+    }
+    .event-breadcrumbs {
+        @apply text-xs text-slate-400;
+    }
+    .event-breadcrumbs-list {
+        @apply flex flex-wrap items-center gap-2;
+    }
+    .event-breadcrumb-link {
+        @apply transition hover:text-orange-400;
+    }
+    .event-breadcrumb-separator {
+        @apply text-slate-600;
+    }
+    .event-breadcrumb-current {
+        @apply text-slate-300;
+    }
+    .event-hero-shell {
+        @apply mt-4 overflow-hidden rounded-xl border border-white/10;
+    }
+    .event-hero-image,
+    .event-hero-placeholder {
+        @apply h-[420px] w-full bg-slate-800 object-cover;
+    }
+    .event-content-grid {
+        @apply mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px];
+    }
+    .event-main-column {
+        @apply flex flex-col gap-6;
+    }
+    .event-category-tag {
+        @apply inline-flex rounded-full bg-orange-500/15 px-3 py-1 text-xs lowercase text-orange-300;
+    }
+    .event-page-title {
+        @apply mt-4 text-4xl font-bold leading-tight text-white;
+    }
+    .event-card-block {
+        @apply rounded-xl border border-white/15 bg-[#0d1016] p-6;
+    }
+    .event-card-title {
+        @apply text-3xl font-semibold text-white;
+    }
+    .event-description {
+        @apply mt-4 leading-8 text-slate-300;
+    }
+    .event-info-list {
+        @apply mt-4 grid gap-3 text-slate-200;
+    }
+    .event-info-label {
+        @apply mr-1 font-semibold text-white;
+    }
+    .event-bullet-list {
+        @apply mt-4 grid list-disc gap-2 pl-5 text-slate-300;
+    }
+    .event-organizer-card {
+        @apply mt-4 flex items-center gap-3 rounded-lg bg-white/10 p-4;
+    }
+    .event-organizer-avatar {
+        @apply flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 font-bold text-white;
+    }
+    .event-organizer-name {
+        @apply font-semibold text-white;
+    }
+    .event-organizer-status {
+        @apply text-xs text-slate-400;
+    }
+    .event-sidebar {
+        @apply lg:pt-20;
+    }
+    .event-sidebar-card {
+        @apply rounded-xl border border-white/15 bg-[#0d1016] p-6;
+    }
+    .event-sidebar-price {
+        @apply text-4xl font-bold text-orange-500;
+    }
+    .event-ticket-button {
+        @apply mt-4 inline-flex w-full items-center justify-center rounded-lg bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-400;
+    }
+    .event-favorite-button {
+        @apply mt-2 w-full rounded-lg border border-white/20 bg-transparent px-4 py-3 font-semibold text-white transition hover:border-orange-500;
+    }
+    .event-ticket-meta {
+        @apply mt-3 text-center text-xs text-slate-400;
+    }
+
+    /* map page */
+    .map-page {
+        @apply bg-[#0f0f10] text-slate-100;
+    }
+    .map-page-inner {
+        @apply mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 lg:px-6;
+    }
+    .map-layout {
+        @apply grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_360px];
+    }
+
+    .map-breadcrumbs {
+        @apply text-xs text-slate-400;
+    }
+    .map-breadcrumbs-list {
+        @apply flex flex-wrap items-center gap-2;
+    }
+    .map-breadcrumb-link {
+        @apply transition hover:text-orange-400;
+    }
+    .map-breadcrumb-separator {
+        @apply text-slate-600;
+    }
+    .map-breadcrumb-current {
+        @apply text-orange-400;
+    }
+
+    .map-hero {
+        @apply rounded-2xl border border-white/10 bg-[#141414] px-6 py-5 shadow-[0_0_0_1px_rgba(255,255,255,0.02)];
+    }
+    .map-hero-row {
+        @apply flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between;
+    }
+    .map-hero-title {
+        @apply text-lg font-semibold text-white md:text-xl;
+    }
+    .map-hero-lead {
+        @apply max-w-md text-xs text-slate-400 md:text-sm;
+    }
+
+    .map-filters {
+        @apply space-y-6 text-sm;
+    }
+    .map-filters-title {
+        @apply text-sm font-semibold text-white;
+    }
+    .map-filters-meta {
+        @apply mt-2 text-xs text-slate-400;
+    }
+    .map-filters-chips {
+        @apply mt-3 flex flex-wrap gap-2;
+    }
+    .map-filters-chip {
+        @apply rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-slate-200 transition hover:border-orange-500/60 hover:text-white;
+    }
+    .map-filters-clear {
+        @apply mt-2 block text-xs text-orange-400 transition hover:text-orange-300;
+    }
+    .map-filters-section {
+        @apply space-y-3;
+    }
+    .map-filters-subtitle {
+        @apply text-xs font-semibold uppercase tracking-wide text-slate-400;
+    }
+    .map-filters-label {
+        @apply flex items-center gap-2 text-xs text-slate-200;
+    }
+    .map-filters-checkbox {
+        @apply h-3 w-3 rounded border-white/30 bg-transparent text-orange-500;
+    }
+    .map-filters-radio {
+        @apply h-3 w-3 border-white/30 text-orange-500;
+    }
+    .map-filters-more {
+        @apply text-xs text-orange-400 transition hover:text-orange-300;
+    }
+
+    .map-results {
+        @apply space-y-4 text-sm text-slate-300;
+    }
+    .map-results-meta {
+        @apply text-xs text-slate-400;
+    }
+    .map-results-list {
+        @apply space-y-3;
+    }
+    .map-result-card {
+        @apply rounded-xl border border-white/10 bg-white/5 p-4;
+    }
+    .map-result-title {
+        @apply text-sm font-semibold text-white;
+    }
+    .map-result-location {
+        @apply mt-1 text-xs text-slate-400;
+    }
+    .map-result-date {
+        @apply mt-2 text-xs text-slate-500;
+    }
+    .map-results-empty {
+        @apply rounded-xl border border-white/10 bg-white/5 px-4 py-10 text-center text-xs text-slate-400;
+    }
+
+    .map-card {
+        @apply space-y-3;
+    }
+    .map-card-shell {
+        @apply overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_10px_40px_rgba(0,0,0,0.35)];
+    }
+    .map-card-frame {
+        @apply relative h-[520px];
+    }
+    .map-canvas {
+        @apply h-full w-full;
+    }
+    .map-zoom {
+        @apply absolute left-3 top-3 flex flex-col overflow-hidden rounded-lg border border-white/10 bg-black/60 text-white;
+    }
+    .map-zoom-button {
+        @apply h-8 w-8 text-lg;
+    }
+    .map-zoom-divider {
+        @apply h-px w-full bg-white/10;
+    }
+    .map-attribution {
+        @apply absolute bottom-2 right-2 text-[10px] text-slate-300;
+    }
+}
+
+@layer components {
+    .organizers-page {
+        @apply bg-slate-50 pb-16 text-center;
+    }
+    .organizers-hero {
+        @apply bg-[linear-gradient(135deg,#ff6b35_0%,#ff8b3d_45%,#f97316_100%)];
+    }
+    .organizers-hero-content {
+        @apply py-24 text-center text-white;
+    }
+    .organizers-hero-title {
+        @apply mx-auto max-w-3xl text-4xl font-extrabold leading-tight md:text-5xl;
+    }
+    .organizers-hero-lead {
+        @apply mx-auto mt-5 max-w-3xl text-base text-white/90 md:text-lg;
+    }
+    .organizers-actions-inline {
+        @apply mt-8 flex flex-wrap justify-center gap-4;
+    }
+
+    .organizers-section {
+        @apply py-14;
+    }
+    .organizers-section-header {
+        @apply mb-8 justify-center text-center;
+    }
+    .organizers-section-title {
+        @apply text-2xl font-extrabold text-slate-900;
+    }
+    .organizers-section-lead {
+        @apply mt-2 text-slate-600;
+    }
+
+    .step-card {
+        @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center;
+    }
+    .step-number {
+        @apply mb-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-white;
+    }
+    .step-card .event-title,
+    .feature-card .event-title {
+        @apply text-lg font-semibold text-slate-900;
+    }
+    .step-card p,
+    .feature-card p {
+        @apply mt-3 text-sm leading-6 text-slate-600;
+    }
+
+    .organizers-section-surface {
+        @apply rounded-2xl bg-white px-6 py-16 shadow-sm;
+    }
+    .feature-card {
+        @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center;
+    }
+    .feature-icon {
+        @apply mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-brand;
+    }
+
+    .organizers-section-mt {
+        @apply mt-8;
+    }
+    .organizers-quick-grid {
+        @apply mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2;
+    }
+    .organizers-quick-card {
+        @apply rounded-2xl p-8 text-center;
+    }
+    .organizers-quick-card .event-title {
+        @apply text-2xl font-bold text-white;
+    }
+    .organizers-quick-card p {
+        @apply mt-3 text-sm;
+    }
+    .organizers-quick-card-primary {
+        @apply bg-brand text-white;
+    }
+    .organizers-quick-card-primary p {
+        @apply text-white/85;
+    }
+    .organizers-quick-card-dark {
+        @apply bg-slate-700 text-white;
+    }
+    .organizers-quick-card-dark p {
+        @apply text-white/80;
+    }
+    .organizers-quick-btn {
+        @apply mt-4 bg-white text-brand;
+    }
+    .organizers-quick-btn-outline {
+        @apply mt-4 border-2 border-white text-white hover:border-white hover:text-white;
+    }
+}
+
+@layer components {
+    .help-page {
+        @apply bg-slate-50 pb-16;
+    }
+    .help-hero {
+        @apply bg-[linear-gradient(135deg,#ff6b35_0%,#ff8b3d_45%,#f97316_100%)] text-white;
+    }
+    .help-hero-content {
+        @apply py-20 text-center;
+    }
+    .help-hero-title {
+        @apply text-4xl font-extrabold leading-tight md:text-5xl;
+    }
+    .help-hero-lead {
+        @apply mx-auto mt-4 max-w-3xl text-white/90 md:text-lg;
+    }
+    .help-hero-actions {
+        @apply mt-8 flex flex-wrap justify-center gap-4;
+    }
+
+    .help-section {
+        @apply py-12;
+    }
+    .help-section-header {
+        @apply mb-8 justify-center text-center;
+    }
+    .help-section-title {
+        @apply text-2xl font-extrabold text-slate-900;
+    }
+    .help-section-lead {
+        @apply mt-2 text-slate-600;
+    }
+
+    .help-card {
+        @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+    }
+    .help-card .event-content {
+        @apply p-0;
+    }
+    .help-card .event-title {
+        @apply text-lg font-semibold text-slate-900;
+    }
+    .help-card p {
+        @apply mt-2 text-sm leading-6 text-slate-600;
+    }
+    .icon-box {
+        @apply mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-brand;
+    }
+
+    .help-contact-grid {
+        @apply mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2;
+    }
+    .help-contact-card {
+        @apply text-center;
+    }
+    .help-contact-card .icon-box {
+        @apply mb-4;
+    }
+    .icon-box-mail {
+        @apply bg-amber-100 text-amber-600;
+    }
+    .icon-box-guide {
+        @apply bg-lime-100 text-lime-600;
+    }
+    .help-contact-text {
+        @apply mb-4;
+    }
+}
+
+@layer components {
+    .header-user-name {
+        @apply hidden text-sm font-semibold text-slate-700 md:inline;
+    }
+    .header-logout-form {
+        @apply inline;
+    }
+
+    .auth-page {
+        @apply py-16;
+    }
+    .auth-wrap {
+        @apply mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+    }
+    .auth-title {
+        @apply text-2xl font-extrabold text-slate-900;
+    }
+    .auth-lead {
+        @apply mt-2 text-sm text-slate-600;
+    }
+    .auth-error {
+        @apply mt-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800;
+    }
+    .auth-success {
+        @apply mt-4 rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800;
+    }
+    .auth-form {
+        @apply mt-5 grid gap-3;
+    }
+    .auth-label {
+        @apply text-sm font-semibold text-slate-700;
+    }
+    .auth-input {
+        @apply rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-brand;
+    }
+    .auth-submit {
+        @apply mt-2;
+    }
+    .auth-wrap-wide {
+        @apply max-w-3xl;
+    }
+    .auth-two-col {
+        @apply grid gap-3 md:grid-cols-2;
+    }
+    .auth-textarea {
+        @apply min-h-28;
+    }
+
+    .panel-page {
+        @apply py-16;
+    }
+    .panel-wrap {
+        @apply mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm;
+    }
+    .panel-wrap-wide {
+        @apply max-w-6xl text-left;
+    }
+    .panel-dark {
+        @apply border-white/10 bg-[#090e17];
+    }
+    .panel-head-row {
+        @apply mb-4 flex items-center justify-between;
+    }
+    .panel-title {
+        @apply text-3xl font-extrabold text-slate-900;
+    }
+    .panel-lead {
+        @apply mt-3 text-slate-600;
+    }
+}
+
+@layer components {
+    .admin-panel-page {
+        @apply bg-[#06080d] py-8 text-slate-100;
+    }
+    .admin-panel-wrap {
+        @apply space-y-5;
+    }
+    .admin-panel-head {
+        @apply space-y-1;
+    }
+    .admin-panel-title {
+        @apply text-4xl font-extrabold text-white;
+    }
+    .admin-panel-lead {
+        @apply text-sm text-slate-400;
+    }
+    .admin-flash {
+        @apply rounded-xl border border-green-300/40 bg-green-500/10 px-4 py-3 text-sm text-green-200;
+    }
+
+    .admin-stats-grid {
+        @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4;
+    }
+    .admin-stat-card {
+        @apply flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0a0f18] p-4;
+    }
+    .admin-stat-icon {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg;
+    }
+    .icon-stat-blue {
+        @apply bg-blue-400/15 text-blue-300;
+    }
+    .icon-stat-amber {
+        @apply bg-amber-400/15 text-amber-300;
+    }
+    .icon-stat-green {
+        @apply bg-green-400/15 text-green-300;
+    }
+    .icon-stat-red {
+        @apply bg-red-400/15 text-red-300;
+    }
+    .admin-stat-value {
+        @apply text-2xl font-bold text-white;
+    }
+    .admin-stat-label {
+        @apply text-xs text-slate-400;
+    }
+
+    .admin-main-grid {
+        @apply grid gap-4 xl:grid-cols-[2fr_1fr];
+    }
+    .admin-side-stack {
+        @apply grid gap-4;
+    }
+    .admin-card {
+        @apply rounded-2xl border border-white/10 bg-[#090e17];
+    }
+    .admin-events-card {
+        @apply min-h-[460px];
+    }
+    .admin-tabs {
+        @apply flex items-center gap-5 border-b border-white/10 px-4 pt-4;
+    }
+    .admin-tab {
+        @apply border-b-2 border-transparent px-1 pb-3 text-xs font-semibold text-slate-400 no-underline;
+    }
+    .admin-tab-active {
+        @apply border-brand text-brand;
+    }
+    .admin-empty {
+        @apply flex min-h-[300px] flex-col items-center justify-center gap-2 text-center text-slate-500;
+    }
+    .admin-empty-small {
+        @apply min-h-[130px];
+    }
+    .admin-empty-icon {
+        @apply text-2xl;
+    }
+    .admin-table-wrap {
+        @apply overflow-x-auto p-4;
+    }
+    .admin-table {
+        @apply w-full border-collapse text-sm;
+    }
+    .admin-table th {
+        @apply border-b border-white/10 px-3 py-3 text-left text-xs font-semibold text-slate-300;
+    }
+    .admin-table td {
+        @apply border-b border-white/5 px-3 py-3 text-slate-300;
+    }
+    .admin-badge {
+        @apply rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs text-slate-200;
+    }
+    .admin-action-row {
+        @apply flex flex-wrap gap-2;
+    }
+    .admin-inline-form {
+        @apply inline;
+    }
+    .admin-action-btn {
+        @apply rounded-lg px-2 py-1 text-xs font-semibold;
+    }
+    .admin-action-approve {
+        @apply border border-green-400/30 bg-green-400/15 text-green-200;
+    }
+    .admin-action-reject {
+        @apply border border-red-400/30 bg-red-400/15 text-red-200;
+    }
+    .admin-action-restore {
+        @apply border border-amber-400/30 bg-amber-400/15 text-amber-200;
+    }
+
+    .admin-side-title {
+        @apply border-b border-white/10 px-4 py-3 text-sm font-semibold text-slate-200;
+    }
+    .admin-side-title-row {
+        @apply flex items-center justify-between border-b border-white/10 px-4 py-2;
+    }
+    .admin-side-title-row .admin-side-title {
+        @apply border-none p-0;
+    }
+    .admin-calendar-head {
+        @apply px-4 pt-4 text-center text-sm font-semibold text-slate-200;
+    }
+    .admin-calendar-days {
+        @apply mt-3 grid grid-cols-7 px-4 text-center text-[11px] text-slate-500;
+    }
+    .admin-calendar-grid {
+        @apply grid grid-cols-7 gap-y-1 px-4 pb-4 pt-2 text-center text-xs;
+    }
+    .admin-cal-cell {
+        @apply mx-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300;
+    }
+    .admin-cal-today {
+        @apply bg-brand text-white;
+    }
+    .admin-action-muted {
+        @apply text-slate-500;
+    }
+    .admin-role-form {
+        @apply flex items-center gap-2;
+    }
+    .admin-role-select {
+        @apply rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-slate-100;
+    }
+    .admin-activity-list {
+        @apply space-y-2 p-4;
+    }
+    .admin-activity-item {
+        @apply rounded-lg border border-white/10 bg-white/5 px-3 py-2;
+    }
+    .admin-activity-title {
+        @apply text-sm text-slate-200;
+    }
+    .admin-activity-meta {
+        @apply mt-1 text-xs text-slate-500;
+    }
+}
+
+@layer components {
+    .org-panel-page {
+        @apply bg-[#06080d] py-8 text-slate-100;
+    }
+    .org-panel-wrap {
+        @apply space-y-4;
+    }
+    .org-greeting-card {
+        @apply flex flex-col gap-2 rounded-2xl border border-white/10 bg-[#090e17] p-5 md:flex-row md:items-center md:justify-between;
+    }
+    .org-greeting-title {
+        @apply text-4xl font-extrabold text-white;
+    }
+    .org-greeting-lead {
+        @apply text-sm text-slate-400;
+    }
+
+    .org-stats-grid {
+        @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4;
+    }
+    .org-stat-card {
+        @apply flex items-center gap-3 rounded-2xl border border-white/10 bg-[#090e17] p-4;
+    }
+    .org-stat-card-accent {
+        @apply border-brand/50;
+    }
+    .org-stat-icon {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg;
+    }
+    .org-icon-indigo {
+        @apply bg-indigo-400/15 text-indigo-300;
+    }
+    .org-icon-green {
+        @apply bg-green-400/15 text-green-300;
+    }
+    .org-icon-amber {
+        @apply bg-amber-400/15 text-amber-300;
+    }
+    .org-icon-red {
+        @apply bg-red-400/15 text-red-300;
+    }
+    .org-stat-value {
+        @apply text-2xl font-bold text-white;
+    }
+    .org-stat-label {
+        @apply text-xs text-slate-400;
+    }
+
+    .org-quick-grid {
+        @apply grid grid-cols-1 gap-3 xl:grid-cols-3;
+    }
+    .org-quick-card {
+        @apply flex items-center gap-3 rounded-2xl border border-white/10 bg-[#090e17] p-4;
+    }
+    .org-quick-icon {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-lg text-white;
+    }
+    .org-quick-title {
+        @apply text-sm font-semibold text-slate-200;
+    }
+    .org-quick-text {
+        @apply mt-1 text-xs text-slate-400;
+    }
+
+    .org-main-grid {
+        @apply grid gap-4 xl:grid-cols-[2fr_1fr];
+    }
+    .org-main-left,
+    .org-main-right {
+        @apply grid gap-4;
+    }
+    .org-card {
+        @apply rounded-2xl border border-white/10 bg-[#090e17];
+    }
+    .org-card-head {
+        @apply flex items-center justify-between border-b border-white/10 px-4 py-3 text-sm font-semibold text-slate-200;
+    }
+    .org-link-muted {
+        @apply text-xs text-brand;
+    }
+    .org-empty {
+        @apply p-10 text-center text-sm text-slate-500;
+    }
+    .org-table-wrap {
+        @apply overflow-x-auto p-4;
+    }
+    .org-table {
+        @apply w-full border-collapse text-sm;
+    }
+    .org-table th {
+        @apply border-b border-white/10 px-3 py-3 text-left text-xs font-semibold text-slate-300;
+    }
+    .org-table td {
+        @apply border-b border-white/5 px-3 py-3 text-slate-300;
+    }
+    .org-badge {
+        @apply rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs text-slate-200;
+    }
+
+    .org-profile-card {
+        @apply items-center p-5 text-center;
+    }
+    .org-avatar {
+        @apply mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand text-3xl font-bold text-white;
+    }
+    .org-profile-name {
+        @apply mt-3 text-2xl font-bold text-white;
+    }
+    .org-profile-role {
+        @apply text-sm text-brand;
+    }
+    .org-profile-email {
+        @apply mt-2 text-xs text-slate-400;
+    }
+    .org-profile-btn {
+        @apply mt-4;
+    }
+
+    .org-calendar-head {
+        @apply px-4 pt-4 text-center text-sm font-semibold text-slate-200;
+    }
+    .org-calendar-days {
+        @apply mt-3 grid grid-cols-7 px-4 text-center text-[11px] text-slate-500;
+    }
+    .org-calendar-grid {
+        @apply grid grid-cols-7 gap-1 px-4 pb-4 pt-2 text-center text-xs;
+    }
+    .org-cal-cell {
+        @apply mx-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300;
+    }
+    .org-cal-today {
+        @apply bg-brand text-white;
+    }
+}
+
+@layer components {
+    .user-panel-page {
+        @apply bg-[#06080d] py-8 text-slate-100;
+    }
+    .user-panel-wrap {
+        @apply space-y-4;
+    }
+    .user-panel-head {
+        @apply space-y-1;
+    }
+    .user-panel-title {
+        @apply text-3xl font-extrabold text-brand;
+    }
+    .user-panel-lead {
+        @apply text-sm text-slate-400;
+    }
+    .user-layout {
+        @apply grid gap-4 xl:grid-cols-[2fr_1fr];
+    }
+    .user-main-col,
+    .user-side-col {
+        @apply grid gap-4;
+    }
+
+    .user-card {
+        @apply rounded-2xl border border-white/10 bg-[#090e17];
+    }
+    .user-card-head {
+        @apply flex items-center justify-between border-b border-white/10 px-4 py-3 text-sm font-semibold text-slate-200;
+    }
+    .user-link-muted {
+        @apply text-xs text-slate-400;
+    }
+    .user-empty {
+        @apply p-10 text-center text-sm text-slate-500;
+    }
+    .user-empty-small {
+        @apply p-6;
+    }
+
+    .user-fav-feature {
+        @apply grid gap-3 p-4 md:grid-cols-[180px_1fr];
+    }
+    .user-fav-image-wrap {
+        @apply h-[120px] overflow-hidden rounded-xl bg-slate-800;
+    }
+    .user-fav-image,
+    .user-fav-image-placeholder {
+        @apply h-full w-full object-cover;
+    }
+    .user-fav-content {
+        @apply space-y-1;
+    }
+    .user-fav-title {
+        @apply text-lg font-semibold text-white;
+    }
+    .user-fav-meta {
+        @apply text-xs text-slate-400;
+    }
+    .user-fav-tags {
+        @apply mt-2 flex gap-2;
+    }
+    .user-inline-form {
+        @apply inline;
+    }
+    .user-mini-btn {
+        @apply mt-2 inline-flex rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-slate-200 hover:border-brand hover:text-brand;
+    }
+    .user-tag {
+        @apply rounded-full border border-brand/40 bg-brand/15 px-2 py-1 text-xs text-brand;
+    }
+    .user-tag-soft {
+        @apply border-white/20 bg-white/5 text-slate-300;
+    }
+
+    .user-reco-grid {
+        @apply grid grid-cols-1 gap-3 p-4 md:grid-cols-2;
+    }
+    .user-reco-card {
+        @apply overflow-hidden rounded-xl border border-white/10 bg-[#0c111a];
+    }
+    .user-reco-media {
+        @apply relative h-[110px] bg-slate-800;
+    }
+    .user-reco-image,
+    .user-reco-image-placeholder {
+        @apply h-full w-full object-cover;
+    }
+    .user-reco-heart {
+        @apply absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-xs text-pink-300;
+    }
+    .user-heart-form {
+        @apply absolute right-2 top-2;
+    }
+    .user-reco-body {
+        @apply p-3;
+    }
+    .user-reco-title {
+        @apply text-sm font-semibold text-slate-100;
+    }
+    .user-reco-meta {
+        @apply mt-1 text-[11px] text-slate-400;
+    }
+
+    .user-cal-head {
+        @apply px-4 pt-4 text-center text-sm font-semibold text-slate-200;
+    }
+    .user-cal-days {
+        @apply mt-3 grid grid-cols-7 px-4 text-center text-[11px] text-slate-500;
+    }
+    .user-cal-grid {
+        @apply grid grid-cols-7 gap-1 px-4 pb-4 pt-2 text-center text-xs;
+    }
+    .user-cal-cell {
+        @apply mx-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300;
+    }
+    .user-cal-today {
+        @apply bg-brand text-white;
+    }
+
+    .user-notif-list {
+        @apply space-y-2 p-3;
+    }
+    .user-notif-item {
+        @apply rounded-lg border border-brand/20 bg-brand/10 px-3 py-2;
+    }
+    .user-notif-read {
+        @apply border-white/10 bg-white/5;
+    }
+    .user-notif-msg {
+        @apply text-xs text-slate-200;
+    }
+    .user-notif-time {
+        @apply mt-1 text-[10px] text-slate-500;
+    }
+    .user-notif-row {
+        @apply mt-1 flex items-center justify-between gap-2;
+    }
+    .user-load-more-wrap {
+        @apply px-4 pb-4 text-center;
+    }
+}
+
+/* Scan your PHP views so classes are detected */
+@source "../../../src/**/*.php";
+@source "../../../public/**/*.php";
+@source "../../../src/**/*.html";
+
+@layer components {
+  .main-container { @apply py-8 text-slate-100; }
+  .page-title { @apply text-4xl font-extrabold text-white; }
+  .page-subtitle { @apply mt-1 text-sm text-slate-400; }
+  .stats-grid { @apply mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4; }
+  .stat-card { @apply flex items-center gap-3 rounded-2xl border border-white/10 bg-[#090e17] p-4 text-left; }
+  .stat-content h3 { @apply text-2xl font-bold text-white; }
+  .stat-content p { @apply text-xs text-slate-400; }
+  .stat-icon { @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg; }
+  .stat-icon.total { @apply bg-blue-400/15 text-blue-300; }
+  .stat-icon.pending { @apply bg-amber-400/15 text-amber-300; }
+  .stat-icon.approved { @apply bg-green-400/15 text-green-300; }
+  .stat-icon.rejected { @apply bg-red-400/15 text-red-300; }
+
+  .dashboard-grid { @apply mt-4 grid gap-4 xl:grid-cols-[2fr_1fr]; }
+  .section-card { @apply rounded-2xl border border-white/10 bg-[#090e17]; }
+  .section-header { @apply border-b border-white/10 px-4 py-3 text-sm font-semibold text-slate-200; }
+  .section-body { @apply p-4; }
+  .sidebar-sections { @apply grid gap-4; }
+  .tabs { @apply flex items-center gap-5 border-b border-white/10 px-4 pt-4; }
+  .tab { @apply border-b-2 border-transparent px-1 pb-3 text-xs font-semibold text-slate-400 no-underline; }
+  .tab.active { @apply border-brand text-brand; }
+  .tab-badge { @apply ml-2 rounded-full bg-red-500 px-2 py-[1px] text-[10px] text-white; }
+  .table-responsive { @apply overflow-x-auto; }
+  .users-table { @apply w-full border-collapse text-sm; }
+  .users-table th { @apply border-b border-white/10 px-3 py-3 text-left text-xs font-semibold text-slate-300; }
+  .users-table td { @apply border-b border-white/5 px-3 py-3 text-slate-300; }
+  .empty-state { @apply p-10 text-center text-sm text-slate-500; }
+  .empty-state-icon { @apply mb-2 text-2xl; }
+
+  .calendar-header-nav { @apply mb-3 flex items-center justify-between text-sm text-slate-200; }
+  .calendar-nav-btn { @apply rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs text-slate-300 disabled:opacity-40; }
+  .calendar-month { @apply text-sm font-semibold; }
+  .calendar-grid { @apply grid grid-cols-7 gap-1 text-center; }
+  .calendar-day-header { @apply text-[11px] text-slate-500; }
+  .calendar-day-cell { @apply mx-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-xs text-slate-300; }
+  .calendar-day-today { @apply bg-brand text-white; }
+  .calendar-tooltip { @apply sr-only; }
+.toast { @apply hidden; }
+}
+
+@layer components {
+  .auth-modal-open {
+    @apply overflow-hidden;
+  }
+  .auth-modal {
+    @apply fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-4;
+  }
+  .auth-modal.hidden {
+    display: none !important;
+  }
+  .auth-modal-backdrop {
+    @apply absolute inset-0 bg-black/70;
+  }
+  .auth-modal-dialog {
+    @apply relative z-[1] w-full rounded-2xl border border-white/15 bg-[#0d111a] p-4 md:p-5 shadow-2xl;
+    max-width: min(30rem, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .auth-modal-close {
+    @apply absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-slate-300;
+  }
+  .auth-modal-title {
+    @apply text-xl font-bold text-white;
+  }
+  .auth-modal-lead {
+    @apply mt-1 text-sm text-slate-400;
+  }
+  .auth-modal-form {
+    @apply mt-4 grid gap-2;
+  }
+  .auth-modal-label {
+    @apply text-xs font-semibold text-slate-300;
+  }
+  .auth-modal-input {
+    @apply w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-slate-100 outline-none focus:border-brand;
+  }
+  .auth-modal-submit {
+    @apply mt-2 w-full;
+  }
+  .auth-modal-error {
+    @apply mt-3 rounded-lg border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm text-red-300;
+  }
+}
