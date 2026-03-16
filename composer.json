@@ -5,5 +5,8 @@
       "App\\": "src/"
     }
   },
+  "scripts": {
+    "test:cpg-70": "php tests/AdminEventModerationRulesTest.php"
+  },
   "require": {}
 }

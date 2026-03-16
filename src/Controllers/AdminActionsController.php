@@ -6,6 +6,7 @@ namespace App\Controllers;
 use App\Auth\Auth;
 use App\Core\Db;
 use App\Repositories\AdminRepository;
+use App\Support\AdminEventModerationRules;
 
 final class AdminActionsController
 {
@@ -16,7 +17,7 @@ final class AdminActionsController
         $tab = (string) ($_POST["tab"] ?? "pending");
         $reason = trim((string) ($_POST["rejection_reason"] ?? ""));
 
-        if ($action === "reject" && $reason === "") {
+        if (AdminEventModerationRules::requiresReason($action) && $reason === "") {
             $this->respondWithEventStatusResult(
                 false,
                 "Būtina nurodyti atmetimo priežastį.",

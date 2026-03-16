@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Support\AdminEventModerationRules;
 use PDO;
 use Throwable;
 
@@ -66,13 +67,19 @@ final class AdminRepository
             return false;
         }
 
-        if ($action === "reject" && trim((string) $rejectionReason) === "") {
+        if (
+            AdminEventModerationRules::requiresReason($action) &&
+            trim((string) $rejectionReason) === ""
+        ) {
             return false;
         }
 
         // Patvirtinimo funkcijai leidziame tik numatytus perejimus tarp renginio busenu.
         $currentStatus = $this->eventStatusById($eventId);
-        if ($currentStatus === null || !$this->canApplyAction($currentStatus, $action)) {
+        if (
+            $currentStatus === null ||
+            !AdminEventModerationRules::canApplyAction($currentStatus, $action)
+        ) {
             return false;
         }
 
@@ -197,16 +204,6 @@ final class AdminRepository
         } catch (Throwable) {
             return null;
         }
-    }
-
-    private function canApplyAction(string $currentStatus, string $action): bool
-    {
-        return match ($action) {
-            "approve" => $currentStatus === "pending",
-            "reject" => in_array($currentStatus, ["pending", "approved"], true),
-            "restore" => in_array($currentStatus, ["rejected", "declined", "rejected_by_admin"], true),
-            default => false,
-        };
     }
 
     private function safeCount(string $sql): int
