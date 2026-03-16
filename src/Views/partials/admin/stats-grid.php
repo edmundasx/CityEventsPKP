@@ -4,6 +4,7 @@ $e = $e ?? static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
 ?>
 
 <div class="stats-grid" id="statsGrid">
+  <?php // Statistikos blokai administratoriaus suvestinei. ?>
   <button class="stat-card" type="button" data-status="all" data-tab-target="pending">
     <div class="stat-icon total">&#128202;</div>
     <div class="stat-content">

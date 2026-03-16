@@ -5,6 +5,7 @@ $e = $e ?? static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
 ?>
 
 <section class="card calendar-card section-card">
+  <?php // Kalendoriaus sritis administratoriaus puslapiui. ?>
   <div class="section-header">
     <h2>Event calendar</h2>
   </div>

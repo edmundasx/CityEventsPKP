@@ -89,6 +89,8 @@ final class AdminActionsController
     {
         $repo = new AdminRepository(Db::pdo());
         $stats = $repo->stats();
+
+        // Sis endpointas grizta su admin puslapio sekciju duomenimis AJAX atnaujinimui.
         return [
             "tab" => $tab,
             "stats" => $stats,

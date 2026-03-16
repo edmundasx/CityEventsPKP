@@ -27,6 +27,7 @@ $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
     <div class="admin-flash"><?= $e($adminFlash) ?></div>
   <?php endif; ?>
 
+  <?php // Administratoriaus puslapio struktura surenkama is atskiru partial failu pagal MVC architektura. ?>
   <?php require __DIR__ . "/../../../partials/admin/stats-grid.php"; ?>
 
   <div class="dashboard-grid">

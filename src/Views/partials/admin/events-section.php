@@ -7,6 +7,7 @@ $e = $e ?? static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
 ?>
 
 <div class="section-card">
+  <?php // Laukianciu patvirtinimo renginiu saraso sekcija su skirtukais pagal statusa. ?>
   <div class="tabs">
     <a class="tab <?= $tab === "pending" ? "active" : "" ?>" data-tab="pending" href="<?= $base ?>/admin/panel?tab=pending">
       Pending approval

@@ -62,6 +62,7 @@ final class PanelController
         $authUser = Auth::user() ?? [];
 
         $repo = new AdminRepository(Db::pdo());
+        // Administratoriaus puslapiui surenkame statistikos blokus, laukianciu renginiu sarasa ir kalendoriaus duomenis.
         $stats = $repo->stats();
         $events = $repo->eventsByTab($tab, 30);
         $users = $repo->latestUsers(10);
