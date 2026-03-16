@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 use App\Auth\Auth;
 $base = $base ?? rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
 $enableLoginModal = (bool) ($enableLoginModal ?? true);
@@ -22,6 +22,12 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
 <body>
 
 <?php require __DIR__ . "/../partials/header.php"; ?>
+
+<?php
+if (isset($view) && is_file($view)) {
+    require $view;
+}
+?>
 
 <?php require __DIR__ . "/../partials/footer.php"; ?>
 <?php if ($enableLoginModal): ?>
