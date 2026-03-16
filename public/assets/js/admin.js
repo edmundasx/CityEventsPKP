@@ -116,6 +116,14 @@
 
     let currentTab = root.dataset.tab || "pending";
 
+    function emptyEventsMessage(tab) {
+      if (tab === "pending") {
+        return "Laukianciu patvirtinimo renginiu nera";
+      }
+
+      return "Sioje kategorijoje renginiu nera";
+    }
+
     function showToast(message) {
       if (!message) return;
       const toast = document.getElementById("toast");
@@ -160,23 +168,23 @@
 
       if (tab === "pending") {
         return [
-          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("approve", "pending")}<button type="submit" class="admin-action-btn admin-action-approve">Approve</button></form>`,
-          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "pending")}<button type="submit" class="admin-action-btn admin-action-reject">Reject</button></form>`,
+          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("approve", "pending")}<button type="submit" class="admin-action-btn admin-action-approve">Patvirtinti</button></form>`,
+          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "pending")}<button type="submit" class="admin-action-btn admin-action-reject">Atmesti</button></form>`,
         ].join("");
       }
 
       if (tab === "approved") {
-        return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "approved")}<button type="submit" class="admin-action-btn admin-action-reject">Reject</button></form>`;
+        return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "approved")}<button type="submit" class="admin-action-btn admin-action-reject">Atmesti</button></form>`;
       }
 
-      return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("restore", "rejected")}<button type="submit" class="admin-action-btn admin-action-restore">Return to pending</button></form>`;
+      return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("restore", "rejected")}<button type="submit" class="admin-action-btn admin-action-restore">Grazinti i laukima</button></form>`;
     }
 
     function renderEvents(events, tab) {
       if (!eventsBody) return;
 
       if (!Array.isArray(events) || events.length === 0) {
-        eventsBody.innerHTML = '<tr><td colspan="6" class="empty-state">No events in this category</td></tr>';
+        eventsBody.innerHTML = `<tr><td colspan="6" class="empty-state">${escapeHtml(emptyEventsMessage(tab))}</td></tr>`;
         return;
       }
 

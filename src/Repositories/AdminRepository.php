@@ -30,6 +30,7 @@ final class AdminRepository
     public function eventsByTab(string $tab = "pending", int $limit = 30): array
     {
         try {
+            // Numatytoji administratoriaus skydelio uzklausa grazina laukiancius patvirtinimo renginius.
             [$whereSql] = $this->tabFilter($tab);
             $stmt = $this->pdo->prepare("
                 SELECT
