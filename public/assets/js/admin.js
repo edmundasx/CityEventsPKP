@@ -232,7 +232,7 @@
       }).join("");
     }
 
-    async function fetchTabDate(tab) {
+    async function fetchTabData(tab) {
       const response = await fetch(`${base}/admin/panel/data?tab=${encodeURIComponent(tab)}`, {
         headers: {
           "X-Requested-With": "XMLHttpRequest",
@@ -256,14 +256,14 @@
       tabLink.addEventListener("click", (event) => {
         event.preventDefault();
         const tab = tabLink.dataset.tab || "pending";
-        fetchTabDate(tab);
+        fetchTabData(tab);
       });
     });
 
     statButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const targetTab = button.dataset.tabTarget || "pending";
-        fetchTabDate(targetTab);
+        fetchTabData(targetTab);
       });
     });
 
@@ -286,7 +286,7 @@
           "X-Requested-With": "XMLHttpRequest",
           Accept: "application/json",
         },
-        body: new URLSearchParams(new FormDate(form)).toString(),
+        body: new URLSearchParams(new FormData(form)).toString(),
       });
 
       const payload = await response.json();
@@ -305,7 +305,7 @@
       if (payload.data && payload.data.events) {
         renderEvents(payload.data.events, currentTab);
       } else if (form.classList.contains("js-admin-event-form")) {
-        await fetchTabDate(currentTab);
+        await fetchTabData(currentTab);
       }
       if (payload.data && payload.data.users) {
         renderUsers(payload.data.users);

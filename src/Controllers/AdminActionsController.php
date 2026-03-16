@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -27,7 +27,7 @@ final class AdminActionsController
             $this->jsonResponse(200, [
                 "ok" => $ok,
                 "message" => $message,
-                "data" => $this->buildPanelDate($tab),
+                "data" => $this->buildPanelData($tab),
             ]);
             return;
         }
@@ -67,12 +67,12 @@ final class AdminActionsController
         header("Location: " . $this->basePath() . "/admin/panel?tab=pending");
     }
 
-    public function panelDate(): void
+    public function panelData(): void
     {
         $tab = (string) ($_GET["tab"] ?? "pending");
         $this->jsonResponse(200, [
             "ok" => true,
-            "data" => $this->buildPanelDate($tab),
+            "data" => $this->buildPanelData($tab),
         ]);
     }
 
@@ -85,7 +85,7 @@ final class AdminActionsController
         return $base;
     }
 
-    private function buildPanelDate(string $tab): array
+    private function buildPanelData(string $tab): array
     {
         $repo = new AdminRepository(Db::pdo());
         $stats = $repo->stats();
