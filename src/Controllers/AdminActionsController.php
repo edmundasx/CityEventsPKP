@@ -17,11 +17,9 @@ final class AdminActionsController
         $reason = (string) ($_POST["rejection_reason"] ?? "");
 
         $repo = new AdminRepository(Db::pdo());
+        // Cia ivykdomas administratoriaus renginio patvirtinimo arba atmetimo veiksmas.
         $ok = $eventId > 0 && $repo->updateEventStatus($eventId, $action, $reason);
-
-        $message = $ok
-            ? "Event status updated."
-            : "Failed to update event status.";
+        $message = $this->eventStatusMessage($action, $ok);
 
         if ($this->isAjaxRequest()) {
             $this->jsonResponse(200, [
@@ -98,6 +96,27 @@ final class AdminActionsController
             "events" => $repo->eventsByTab($tab, 30),
             "users" => $repo->latestUsers(10),
         ];
+    }
+
+    private function eventStatusMessage(string $action, bool $ok): string
+    {
+        $action = strtolower($action);
+
+        if ($ok) {
+            return match ($action) {
+                "approve" => "Renginys patvirtintas.",
+                "reject" => "Renginys atmestas.",
+                "restore" => "Renginys grazintas i laukimo busena.",
+                default => "Renginio busena atnaujinta.",
+            };
+        }
+
+        return match ($action) {
+            "approve" => "Nepavyko patvirtinti renginio.",
+            "reject" => "Nepavyko atmesti renginio.",
+            "restore" => "Nepavyko grazinti renginio i laukimo busena.",
+            default => "Nepavyko atnaujinti renginio busenos.",
+        };
     }
 
     private function isAjaxRequest(): bool

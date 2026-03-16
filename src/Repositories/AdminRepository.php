@@ -66,6 +66,12 @@ final class AdminRepository
             return false;
         }
 
+        // Patvirtinimo funkcijai leidziame tik numatytus perejimus tarp renginio busenu.
+        $currentStatus = $this->eventStatusById($eventId);
+        if ($currentStatus === null || !$this->canApplyAction($currentStatus, $action)) {
+            return false;
+        }
+
         $status = match ($action) {
             "approve" => "approved",
             "reject" => "rejected",
@@ -168,6 +174,35 @@ final class AdminRepository
             "approved" => ["e.status = 'approved'"],
             "rejected" => ["e.status IN ('rejected','declined','rejected_by_admin')"],
             default => ["e.status = 'pending'"],
+        };
+    }
+
+    private function eventStatusById(int $eventId): ?string
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT status
+                FROM events
+                WHERE id = :id
+                LIMIT 1
+            ");
+            $stmt->bindValue(":id", $eventId, PDO::PARAM_INT);
+            $stmt->execute();
+            $status = $stmt->fetchColumn();
+
+            return is_string($status) ? strtolower($status) : null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function canApplyAction(string $currentStatus, string $action): bool
+    {
+        return match ($action) {
+            "approve" => $currentStatus === "pending",
+            "reject" => in_array($currentStatus, ["pending", "approved"], true),
+            "restore" => in_array($currentStatus, ["rejected", "declined", "rejected_by_admin"], true),
+            default => false,
         };
     }
 

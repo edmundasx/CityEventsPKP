@@ -299,7 +299,7 @@
 
       const payload = await response.json();
       if (!response.ok) {
-        showToast("Action failed.");
+        showToast("Veiksmo atlikti nepavyko.");
         return;
       }
 

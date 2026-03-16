@@ -50,6 +50,7 @@ $e = $e ?? static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
                 <td>
                   <div class="admin-action-row">
                     <?php if ($tab === "pending"): ?>
+                      <?php // Patvirtinimo mygtukas aktyvuoja renginio patvirtinimo funkcija administratoriaus skydelyje. ?>
                       <form method="post" action="<?= $base ?>/admin/panel/event-status" class="admin-inline-form js-admin-event-form">
                         <input type="hidden" name="event_id" value="<?= $e($event["id"] ?? "") ?>">
                         <input type="hidden" name="action" value="approve">
