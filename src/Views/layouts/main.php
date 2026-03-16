@@ -1,6 +1,6 @@
 ﻿<?php
 use App\Auth\Auth;
-$base = "/cityevents/public";
+$base = $base ?? rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
 $enableLoginModal = (bool) ($enableLoginModal ?? true);
 $enableLoginModal = $enableLoginModal && !Auth::check();
 ?>
