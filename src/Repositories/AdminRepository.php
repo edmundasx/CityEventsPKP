@@ -66,6 +66,10 @@ final class AdminRepository
             return false;
         }
 
+        if ($action === "reject" && trim((string) $rejectionReason) === "") {
+            return false;
+        }
+
         // Patvirtinimo funkcijai leidziame tik numatytus perejimus tarp renginio busenu.
         $currentStatus = $this->eventStatusById($eventId);
         if ($currentStatus === null || !$this->canApplyAction($currentStatus, $action)) {
@@ -90,11 +94,10 @@ final class AdminRepository
             $stmt->bindValue(":id", $eventId, PDO::PARAM_INT);
             $stmt->bindValue(":status", $status, PDO::PARAM_STR);
             if ($status === "rejected") {
+                // Atmetimo veiksmui issaugome administratoriaus ivesta priezasti.
                 $stmt->bindValue(
                     ":reason",
-                    $rejectionReason !== null && trim($rejectionReason) !== ""
-                        ? trim($rejectionReason)
-                        : "Atmesta administratoriaus",
+                    trim((string) $rejectionReason),
                     PDO::PARAM_STR,
                 );
             } else {

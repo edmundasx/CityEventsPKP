@@ -159,6 +159,33 @@
       });
     }
 
+    function collectRejectReason(form) {
+      const actionInput = form.querySelector('input[name="action"]');
+      if (!(actionInput instanceof HTMLInputElement) || actionInput.value !== "reject") {
+        return true;
+      }
+
+      const reasonInput = form.querySelector('input[name="rejection_reason"]');
+      if (!(reasonInput instanceof HTMLInputElement)) {
+        return false;
+      }
+
+      // Atmetimo veiksmui reikalaujame administratoriaus ivestos priezasties pries siunciant forma.
+      const reason = window.prompt("Iveskite atmetimo priezasti:");
+      if (reason === null) {
+        return false;
+      }
+
+      const trimmedReason = reason.trim();
+      if (!trimmedReason) {
+        showToast("Butina nurodyti atmetimo priezasti.");
+        return false;
+      }
+
+      reasonInput.value = trimmedReason;
+      return true;
+    }
+
     function eventActionButtons(eventId, tab) {
       const hidden = (action, tabName) => [
         `<input type="hidden" name="event_id" value="${eventId}">`,
@@ -287,6 +314,10 @@
 
       event.preventDefault();
 
+      if (form.classList.contains("js-admin-event-form") && !collectRejectReason(form)) {
+        return;
+      }
+
       const response = await fetch(form.action, {
         method: "POST",
         headers: {
@@ -298,8 +329,8 @@
       });
 
       const payload = await response.json();
-      if (!response.ok) {
-        showToast("Veiksmo atlikti nepavyko.");
+      if (!response.ok || !payload.ok) {
+        showToast((payload && payload.message) || "Veiksmo atlikti nepavyko.");
         return;
       }
 

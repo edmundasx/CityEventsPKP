@@ -61,6 +61,7 @@ $e = $e ?? static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
                         <input type="hidden" name="event_id" value="<?= $e($event["id"] ?? "") ?>">
                         <input type="hidden" name="action" value="reject">
                         <input type="hidden" name="tab" value="pending">
+                        <input type="hidden" name="rejection_reason" value="">
                         <button type="submit" class="admin-action-btn admin-action-reject">Atmesti</button>
                       </form>
                     <?php elseif ($tab === "approved"): ?>
@@ -68,6 +69,7 @@ $e = $e ?? static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
                         <input type="hidden" name="event_id" value="<?= $e($event["id"] ?? "") ?>">
                         <input type="hidden" name="action" value="reject">
                         <input type="hidden" name="tab" value="approved">
+                        <input type="hidden" name="rejection_reason" value="">
                         <button type="submit" class="admin-action-btn admin-action-reject">Atmesti</button>
                       </form>
                     <?php else: ?>

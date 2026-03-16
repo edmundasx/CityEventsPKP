@@ -12,26 +12,23 @@ final class AdminActionsController
     public function eventStatus(): void
     {
         $eventId = (int) ($_POST["event_id"] ?? 0);
-        $action = (string) ($_POST["action"] ?? "");
+        $action = strtolower((string) ($_POST["action"] ?? ""));
         $tab = (string) ($_POST["tab"] ?? "pending");
-        $reason = (string) ($_POST["rejection_reason"] ?? "");
+        $reason = trim((string) ($_POST["rejection_reason"] ?? ""));
 
-        $repo = new AdminRepository(Db::pdo());
-        // Cia ivykdomas administratoriaus renginio patvirtinimo arba atmetimo veiksmas.
-        $ok = $eventId > 0 && $repo->updateEventStatus($eventId, $action, $reason);
-        $message = $this->eventStatusMessage($action, $ok);
-
-        if ($this->isAjaxRequest()) {
-            $this->jsonResponse(200, [
-                "ok" => $ok,
-                "message" => $message,
-                "data" => $this->buildPanelData($tab),
-            ]);
+        if ($action === "reject" && $reason === "") {
+            $this->respondWithEventStatusResult(
+                false,
+                "Būtina nurodyti atmetimo priežastį.",
+                $tab,
+            );
             return;
         }
 
-        $_SESSION["admin_flash"] = $message;
-        header("Location: " . $this->basePath() . "/admin/panel?tab=" . rawurlencode($tab));
+        $repo = new AdminRepository(Db::pdo());
+        // Atmetant rengini priezastis yra privaloma ir perduodama i saugojimo logika.
+        $ok = $eventId > 0 && $repo->updateEventStatus($eventId, $action, $reason);
+        $this->respondWithEventStatusResult($ok, $this->eventStatusMessage($action, $ok), $tab);
     }
 
     public function userRole(): void
@@ -96,6 +93,21 @@ final class AdminActionsController
             "events" => $repo->eventsByTab($tab, 30),
             "users" => $repo->latestUsers(10),
         ];
+    }
+
+    private function respondWithEventStatusResult(bool $ok, string $message, string $tab): void
+    {
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(200, [
+                "ok" => $ok,
+                "message" => $message,
+                "data" => $this->buildPanelData($tab),
+            ]);
+            return;
+        }
+
+        $_SESSION["admin_flash"] = $message;
+        header("Location: " . $this->basePath() . "/admin/panel?tab=" . rawurlencode($tab));
     }
 
     private function eventStatusMessage(string $action, bool $ok): string
