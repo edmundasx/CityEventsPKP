@@ -7,6 +7,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
+import json
 
 class VilniusEventsScraper:
     def __init__(self, headless=True):
@@ -107,13 +108,27 @@ class VilniusEventsScraper:
                     category_elem = card.find('p', class_='m-card__category')
                     category = category_elem.get_text(strip=True) if category_elem else ""
                     
+                    link_elem = card.find('a', class_='u-text-decoration-none')
+                    link = ""
+                    if link_elem and link_elem.get('href'):
+                        href = link_elem['href']
+                        link = href if href.startswith('http') else f"{self.base_url}{href}"
+                    
+                    img_elem = card.find('img', class_='m-card__image')
+                    image_url = ""
+                    if img_elem and img_elem.get('src'):
+                        src = img_elem['src']
+                        image_url = src if src.startswith('http') else f"{self.base_url}{src}"
+                    
                     if title:
                         events.append({
                             'id': idx,
                             'pavadinimas': title,
                             'data_laikas': date,
                             'vieta': location,
-                            'kategorija': category
+                            'kategorija': category,
+                            'nuoroda': link,
+                            'paveiksliukas': image_url
                         })
                         
                 except Exception as e:
@@ -128,10 +143,25 @@ class VilniusEventsScraper:
         
         finally:
             self.driver.quit()
+    
+    def save_results(self, events, base_filename='vilnius_events'):
+        if not events:
+            print("No data to save")
+            return
+        
+        df = pd.DataFrame(events)
+        csv_file = f'{base_filename}.csv'
+        df.to_csv(csv_file, index=False, encoding='utf-8-sig')
+        print(f"Saved to {csv_file}")
+        
+        json_file = f'{base_filename}.json'
+        with open(json_file, 'w', encoding='utf-8') as f:
+            json.dump(events, f, ensure_ascii=False, indent=2)
+        print(f"Saved to {json_file}")
 
 
 def main():
-    print("VILNIUS EVENTS SCRAPER v2.0")
+    print("VILNIUS EVENTS SCRAPER v3.0")
     
     scraper = VilniusEventsScraper(headless=True)
     url = "https://www.vilnius-events.lt/renginiai-pagal-vieta/"
@@ -139,8 +169,9 @@ def main():
     
     if events:
         print(f"\nCollected {len(events)} events")
-        df = pd.DataFrame(events)
-        print(df.head(10))
+        print("\nSaving results...")
+        scraper.save_results(events, 'vilnius_events')
+        print("\nComplete!")
     else:
         print("\nNo events collected")
 
