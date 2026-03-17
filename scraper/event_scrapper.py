@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import json
+import sqlite3
 
 class VilniusEventsScraper:
     def __init__(self, headless=True):
@@ -158,10 +159,48 @@ class VilniusEventsScraper:
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(events, f, ensure_ascii=False, indent=2)
         print(f"Saved to {json_file}")
+        
+        try:
+            db_file = f'{base_filename}.db'
+            conn = sqlite3.connect(db_file)
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS renginiai (
+                    id INTEGER PRIMARY KEY,
+                    pavadinimas TEXT,
+                    data_laikas TEXT,
+                    vieta TEXT,
+                    kategorija TEXT,
+                    nuoroda TEXT,
+                    paveiksliukas TEXT
+                )
+            ''')
+            
+            for event in events:
+                cursor.execute('''
+                    INSERT INTO renginiai (id, pavadinimas, data_laikas, vieta, kategorija, nuoroda, paveiksliukas)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    event['id'],
+                    event['pavadinimas'],
+                    event['data_laikas'],
+                    event['vieta'],
+                    event['kategorija'],
+                    event['nuoroda'],
+                    event['paveiksliukas']
+                ))
+            
+            conn.commit()
+            conn.close()
+            print(f"Saved to {db_file}")
+            
+        except Exception as e:
+            print(f"Failed to save SQLite database: {e}")
 
 
 def main():
-    print("VILNIUS EVENTS SCRAPER v3.0")
+    print("VILNIUS EVENTS SCRAPER v4.0")
     
     scraper = VilniusEventsScraper(headless=True)
     url = "https://www.vilnius-events.lt/renginiai-pagal-vieta/"
