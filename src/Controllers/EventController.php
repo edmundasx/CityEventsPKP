@@ -27,6 +27,32 @@ final class EventController
         require __DIR__ . "/../Views/layouts/main.php";
     }
 
+    public function filter(): void
+    {
+        $base = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? ""), "/");
+        if ($base === "" || $base === "." || $base === "/") {
+            $base = "";
+        }
+
+        $title = "Events";
+        $view = __DIR__ . "/../Views/pages/events.php";
+        $enableLoginModal = true;
+
+        $repo = new EventRepository(Db::pdo());
+        $filters = [
+            'category' => $_GET['category'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? '',
+            'price_min' => isset($_GET['price_min']) ? (float)$_GET['price_min'] : null,
+            'price_max' => isset($_GET['price_max']) ? (float)$_GET['price_max'] : null,
+        ];
+        $events = $repo->filterEvents($filters);
+        $categories = $repo->getCategories();
+        $priceRange = $repo->getPriceRange();
+
+        require __DIR__ . "/../Views/layouts/main.php";
+    }
+
     public function show(string $id): void
     {
         $id = (int) $id;

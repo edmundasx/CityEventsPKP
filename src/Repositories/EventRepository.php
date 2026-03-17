@@ -45,7 +45,7 @@ final class EventRepository
             return [
                 "id" => (int) $r["id"],
                 "title" => (string) $r["title"],
-                "date" => $dt->format("d/m/Y"),
+                "date" => $dt->format("Y-m-d"),
                 "time" => $dt->format("H:i"),
                 "location" => (string) $r["location"],
                 "price" => $priceLabel,
@@ -102,7 +102,7 @@ final class EventRepository
                 "id" => (int) $r["id"],
                 "title" => (string) $r["title"],
                 "location" => (string) $r["location"],
-                "event_date" => $dt->format("d/m/Y"),
+                "event_date" => $dt->format("Y-m-d"),
                 "event_time" => $dt->format("H:i"),
                 "price_eur" => $price,
                 "is_free" => $price <= 0.0,
@@ -113,77 +113,6 @@ final class EventRepository
                 "cover_image" => (string) ($r["cover_image"] ?? ""),
             ];
         }, $rows);
-    }
-
-    public function findById(int $id): ?array
-    {
-        $columns = $this->eventColumns();
-
-        $sql =
-            "
-            SELECT
-                e.id,
-                e.title,
-                e.location,
-                e.event_date,
-                e.price,
-                " .
-            $this->selectColumn($columns, "description") .
-            ",
-                " .
-            $this->selectColumn($columns, "category") .
-            ",
-                " .
-            $this->selectColumn($columns, "district") .
-            ",
-                " .
-            $this->selectColumn($columns, "lat") .
-            ",
-                " .
-            $this->selectColumn($columns, "lng") .
-            ",
-                e.cover_image
-            FROM events e
-            WHERE e.status = 'approved'
-              AND e.id = :id
-            LIMIT 1
-        ";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($row === false) {
-            return null;
-        }
-
-        $dt = new DateTimeImmutable($row["event_date"]);
-        $price = (float) $row["price"];
-        $priceLabel =
-            $price <= 0.0
-                ? "Nemokamai"
-                : "€" . number_format($price, 2, ".", "");
-
-        $lat = $row["lat"] ?? null;
-        $lng = $row["lng"] ?? null;
-
-        return [
-            "id" => (int) $row["id"],
-            "title" => (string) $row["title"],
-            "description" => (string) ($row["description"] ?? ""),
-            "location" => (string) $row["location"],
-            "date" => $dt->format("d/m/Y"),
-            "time" => $dt->format("H:i"),
-            "price" => $priceLabel,
-            "price_raw" => $price,
-            "category" => (string) ($row["category"] ?? ""),
-            "district" => (string) ($row["district"] ?? ""),
-            "lat" => $lat === null ? null : (float) $lat,
-            "lng" => $lng === null ? null : (float) $lng,
-            "image" => (string) ($row["cover_image"] ?? ""),
-        ];
     }
 
     private function eventColumns(): array
@@ -211,19 +140,80 @@ final class EventRepository
         return "NULL AS {$name}";
     }
 
+    public function filterEvents(array $filters = []): array
+    {
+        $where = ["e.status = 'approved'"];
+        $params = [];
+
+        // Category filter
+        if (!empty($filters['category'])) {
+            $where[] = "e.category = :category";
+            $params[':category'] = $filters['category'];
+        }
+
+        // Date range filter
+        if (!empty($filters['date_from'])) {
+            $where[] = "e.event_date >= :date_from";
+            $params[':date_from'] = $filters['date_from'];
+        }
+        if (!empty($filters['date_to'])) {
+            $where[] = "e.event_date <= :date_to";
+            $params[':date_to'] = $filters['date_to'];
+        }
+
+        // Price range filter
+        if (isset($filters['price_min'])) {
+            $where[] = "e.price >= :price_min";
+            $params[':price_min'] = $filters['price_min'];
+        }
+        if (isset($filters['price_max'])) {
+            $where[] = "e.price <= :price_max";
+            $params[':price_max'] = $filters['price_max'];
+        }
+
+        $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        $sql = "SELECT e.id, e.title, e.location, e.event_date, e.price, e.category, e.cover_image FROM events e $whereSql ORDER BY e.event_date ASC";
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(static function (array $r): array {
+            $dt = new DateTimeImmutable($r["event_date"]);
+            $price = (float) $r["price"];
+            $priceLabel = $price <= 0.0 ? "Nemokamai" : "€" . number_format($price, 2, ".", "");
+            return [
+                "id" => (int) $r["id"],
+                "title" => (string) $r["title"],
+                "date" => $dt->format("Y-m-d"),
+                "time" => $dt->format("H:i"),
+                "location" => (string) $r["location"],
+                "price" => $priceLabel,
+                "category" => (string) ($r["category"] ?? ""),
+                "image" => (string) ($r["cover_image"] ?? ""),
+            ];
+        }, $rows);
+    }
     public function getCategories(): array
     {
-        $stmt = $this->pdo->query("SELECT DISTINCT category FROM events WHERE category IS NOT NULL AND category != '' ORDER BY category");
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $sql = "SELECT DISTINCT category FROM events WHERE status = 'approved' AND category IS NOT NULL AND category != '' ORDER BY category ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => $row['category'], $rows);
     }
-
     public function getPriceRange(): array
     {
-        $stmt = $this->pdo->query("SELECT MIN(price) as min_price, MAX(price) as max_price FROM events WHERE price > 0");
+        $sql = "SELECT MIN(price) AS min_price, MAX(price) AS max_price FROM events WHERE status = 'approved'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return [
-            'min' => (float) ($row['min_price'] ?? 0),
-            'max' => (float) ($row['max_price'] ?? 100),
+            'min' => (float)($row['min_price'] ?? 0),
+            'max' => (float)($row['max_price'] ?? 0),
         ];
     }
 }

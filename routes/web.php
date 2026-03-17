@@ -61,5 +61,6 @@ return function (Router $router): void {
 
     // Events (optional, keep if you have these controllers)
     $router->get("/events", "EventController@index");
+    $router->get("/events/filter", "EventController@filter");
     $router->get("/events/{id:\d+}", "EventController@show");
 };

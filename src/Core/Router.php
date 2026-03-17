@@ -306,7 +306,12 @@ final class Router
             }
 
             if ($n === 1) {
-                call_user_func($cb, $assocArgs);
+                // If single positional arg available, pass it; else pass assoc array
+                if (count($positionalArgs) === 1) {
+                    call_user_func($cb, $positionalArgs[0]);
+                } else {
+                    call_user_func($cb, $assocArgs);
+                }
                 return;
             }
 
