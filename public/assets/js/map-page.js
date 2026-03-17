@@ -1,4 +1,4 @@
-﻿(() => {
+﻿﻿(() => {
   function initMapPage() {
     const el = document.getElementById("ce-map");
     if (!el) return;
@@ -49,6 +49,13 @@
           <div style="font-size:12px;opacity:.8">${escapeHtml(date)}</div>
         </div>`,
       );
+
+      m.on("mouseover", function () {
+        this.openPopup();
+      });
+      m.on("mouseout", function () {
+        this.closePopup();
+      });
 
       markers.push(m);
       markerById.set(String(ev.id), m);

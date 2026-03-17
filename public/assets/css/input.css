@@ -35,10 +35,10 @@
         @apply relative overflow-hidden bg-brand text-white min-h-[34rem];
     }
     .hero-inner {
-        @apply relative z-10 flex min-h-[34rem] items-center justify-center py-14;
+        @apply relative z-10 flex min-h-[34rem] items-center justify-center py-14 pointer-events-none;
     }
     .hero-content {
-        @apply mx-auto max-w-2xl text-center;
+        @apply mx-auto max-w-2xl text-center pointer-events-auto;
     }
     .hero-title {
         @apply text-3xl font-extrabold leading-tight md:text-5xl;

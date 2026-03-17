@@ -197,7 +197,9 @@
   function initLeafletMap(mapEl, events) {
     if (typeof L === "undefined") return;
 
-    const map = L.map(mapEl).setView([54.6872, 25.2797], 11);
+    const map = L.map(mapEl, {
+      scrollWheelZoom: false,
+    }).setView([54.6872, 25.2797], 11);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -213,6 +215,12 @@
 
       const marker = L.marker([event.lat, event.lng]);
       marker.bindPopup(buildPopup(event));
+      marker.on("mouseover", function () {
+        this.openPopup();
+      });
+      marker.on("mouseout", function () {
+        this.closePopup();
+      });
       mapState.markersById.set(String(event.id), marker);
     });
 

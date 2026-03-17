@@ -23,6 +23,10 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
 
 <?php require __DIR__ . "/../partials/header.php"; ?>
 
+<main>
+  <?php if (isset($view)) require $view; ?> 
+</main>
+
 <?php require __DIR__ . "/../partials/footer.php"; ?>
 <?php if ($enableLoginModal): ?>
   <div class="auth-modal hidden" id="loginModal" aria-hidden="true">
