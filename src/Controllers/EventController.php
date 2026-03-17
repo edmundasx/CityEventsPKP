@@ -21,12 +21,16 @@ final class EventController
 
         $repo = new EventRepository(Db::pdo());
         $events = $repo->homepageEvents(50, true);
+        $categories = $repo->getCategories();
+        $priceRange = $repo->getPriceRange();
 
         require __DIR__ . "/../Views/layouts/main.php";
     }
 
-    public function show(int $id): void
+    public function show(string $id): void
     {
+        $id = (int) $id;
+
         $base = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? ""), "/");
         if ($base === "" || $base === "." || $base === "/") {
             $base = "";

@@ -45,7 +45,7 @@ final class EventRepository
             return [
                 "id" => (int) $r["id"],
                 "title" => (string) $r["title"],
-                "date" => $dt->format("Y-m-d"),
+                "date" => $dt->format("d/m/Y"),
                 "time" => $dt->format("H:i"),
                 "location" => (string) $r["location"],
                 "price" => $priceLabel,
@@ -102,7 +102,7 @@ final class EventRepository
                 "id" => (int) $r["id"],
                 "title" => (string) $r["title"],
                 "location" => (string) $r["location"],
-                "event_date" => $dt->format("Y-m-d"),
+                "event_date" => $dt->format("d/m/Y"),
                 "event_time" => $dt->format("H:i"),
                 "price_eur" => $price,
                 "is_free" => $price <= 0.0,
@@ -174,7 +174,7 @@ final class EventRepository
             "title" => (string) $row["title"],
             "description" => (string) ($row["description"] ?? ""),
             "location" => (string) $row["location"],
-            "date" => $dt->format("Y-m-d"),
+            "date" => $dt->format("d/m/Y"),
             "time" => $dt->format("H:i"),
             "price" => $priceLabel,
             "price_raw" => $price,
@@ -209,5 +209,21 @@ final class EventRepository
         }
 
         return "NULL AS {$name}";
+    }
+
+    public function getCategories(): array
+    {
+        $stmt = $this->pdo->query("SELECT DISTINCT category FROM events WHERE category IS NOT NULL AND category != '' ORDER BY category");
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function getPriceRange(): array
+    {
+        $stmt = $this->pdo->query("SELECT MIN(price) as min_price, MAX(price) as max_price FROM events WHERE price > 0");
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return [
+            'min' => (float) ($row['min_price'] ?? 0),
+            'max' => (float) ($row['max_price'] ?? 100),
+        ];
     }
 }
