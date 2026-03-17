@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
@@ -22,6 +23,52 @@ class VilniusEventsScraper:
         self.base_url = "https://www.vilnius-events.lt"
         self.wait = WebDriverWait(self.driver, 10)
     
+    def click_load_more(self):
+        click_count = 0
+        
+        while True:
+            try:
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+                
+                load_more_button = None
+                
+                try:
+                    load_more_button = self.wait.until(
+                        EC.element_to_be_clickable((By.XPATH, 
+                            "//a[contains(text(), 'Daugiau renginiu')] | //button[contains(text(), 'Daugiau renginiu')]"))
+                    )
+                except TimeoutException:
+                    try:
+                        load_more_button = self.driver.find_element(By.CLASS_NAME, "more-date-block")
+                        load_more_button = load_more_button.find_element(By.TAG_NAME, "a")
+                    except NoSuchElementException:
+                        pass
+                
+                if not load_more_button or not load_more_button.is_displayed():
+                    break
+                
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", load_more_button)
+                time.sleep(0.5)
+                
+                try:
+                    load_more_button.click()
+                except ElementClickInterceptedException:
+                    self.driver.execute_script("arguments[0].click();", load_more_button)
+                
+                click_count += 1
+                print(f"Clicked load more button ({click_count} times)")
+                time.sleep(2)
+                
+            except (TimeoutException, NoSuchElementException):
+                break
+            except Exception as e:
+                print(f"Error clicking button: {e}")
+                break
+        
+        print(f"Total clicks: {click_count}")
+        return click_count
+    
     def scrape_events(self, url: str):
         try:
             print(f"Loading page: {url}")
@@ -30,6 +77,12 @@ class VilniusEventsScraper:
             self.wait.until(
                 EC.presence_of_element_located((By.CLASS_NAME, "o-card"))
             )
+            time.sleep(2)
+            
+            print("Starting automatic loading...")
+            self.click_load_more()
+            
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)
             
             html = self.driver.page_source
@@ -78,7 +131,7 @@ class VilniusEventsScraper:
 
 
 def main():
-    print("VILNIUS EVENTS SCRAPER v1.0")
+    print("VILNIUS EVENTS SCRAPER v2.0")
     
     scraper = VilniusEventsScraper(headless=True)
     url = "https://www.vilnius-events.lt/renginiai-pagal-vieta/"
@@ -87,7 +140,7 @@ def main():
     if events:
         print(f"\nCollected {len(events)} events")
         df = pd.DataFrame(events)
-        print(df.head())
+        print(df.head(10))
     else:
         print("\nNo events collected")
 
