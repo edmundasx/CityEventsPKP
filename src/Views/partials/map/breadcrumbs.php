@@ -1,4 +1,4 @@
-﻿<nav class="map-breadcrumbs">
+<nav class="map-breadcrumbs">
     <ol class="map-breadcrumbs-list">
         <li>
             <a class="map-breadcrumb-link" href="<?= ($base ?? "") .

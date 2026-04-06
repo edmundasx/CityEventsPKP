@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // events-grid.php (partial)
 
 // Inputs (optional, can be overridden by the parent view)
