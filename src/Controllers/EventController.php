@@ -22,6 +22,7 @@ final class EventController
         $repo = new EventRepository(Db::pdo());
         $events = $repo->homepageEvents(50, true);
         $categories = $repo->getCategories();
+        $categoryCounts = $repo->getCategoryCounts();
         $priceRange = $repo->getPriceRange();
 
         require __DIR__ . "/../Views/layouts/main.php";
@@ -48,6 +49,7 @@ final class EventController
         ];
         $events = $repo->filterEvents($filters);
         $categories = $repo->getCategories();
+        $categoryCounts = $repo->getCategoryCounts();
         $priceRange = $repo->getPriceRange();
 
         require __DIR__ . "/../Views/layouts/main.php";

@@ -8,6 +8,21 @@ use PDO;
 
 final class EventRepository
 {
+    /**
+     * Returns an associative array of category => event count for approved events.
+     */
+    public function getCategoryCounts(): array
+    {
+        $sql = "SELECT category, COUNT(*) as count FROM events WHERE status = 'approved' AND category IS NOT NULL AND category != '' GROUP BY category ORDER BY category ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['category']] = (int)$row['count'];
+        }
+        return $result;
+    }
     private ?array $eventColumns = null;
 
     public function __construct(private PDO $pdo) {}
