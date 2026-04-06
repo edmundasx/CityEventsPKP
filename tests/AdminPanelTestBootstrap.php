@@ -6,6 +6,8 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Core\Db;
 use App\Core\Router;
 
+// Bendras integracinių testų bootstrap: sukuria izoliuotą testinę DB,
+// užpildo bazinius duomenis ir leidžia maršrutą kviesti per tikrą routerį.
 function assertTrue(bool $condition, string $message): void
 {
     if (!$condition) {
@@ -78,6 +80,8 @@ function adminTestBootstrapDatabase(): PDO
         ],
     );
 
+    // Kiekvienas testas pradeda nuo švarios schemos, kad scenarijai
+    // nepriklausytų vienas nuo kito ir būtų kartojami tiek lokaliai, tiek CI.
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
     $pdo->exec('DROP TABLE IF EXISTS events');
     $pdo->exec('DROP TABLE IF EXISTS users');
@@ -175,6 +179,8 @@ function adminTestBootstrapDatabase(): PDO
 
 function forceAdminTestPdo(PDO $pdo): void
 {
+    // Testuose priverstinai pakeičiame statinį aplikacijos PDO,
+    // kad controlleris ir repository naudotų testinę duomenų bazę.
     $reflection = new ReflectionClass(Db::class);
     $property = $reflection->getProperty('pdo');
     $property->setAccessible(true);
@@ -197,6 +203,8 @@ function dispatchAdminRoute(
     array $post = [],
     array $get = [],
 ): array {
+    // Čia simuliuojame AJAX užklausą į tikrą maršrutą:
+    // session -> middleware -> controller -> repository -> DB -> JSON response.
     $_GET = $get;
     $_POST = $post;
     $_SESSION = [

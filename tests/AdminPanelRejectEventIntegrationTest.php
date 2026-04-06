@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/AdminPanelTestBootstrap.php';
 
+// Integracinis testas: tikrina pilną admin atmetimo kelią
+// nuo maršruto ir controllerio iki įrašo pakeitimo DB bei JSON atsako.
 $pdo = adminTestBootstrapDatabase();
 
 $response = dispatchAdminRoute('POST', '/admin/panel/event-status', [
@@ -12,6 +14,8 @@ $response = dispatchAdminRoute('POST', '/admin/panel/event-status', [
     'tab' => 'pending',
 ]);
 
+// Patikriname ne tik verslo rezultatą, bet ir tai,
+// ką admin panelis gautų atgal po AJAX užklausos.
 assertSame(200, $response['status'], 'Reject route should respond with HTTP 200.');
 assertTrue($response['json']['ok'] === true, 'Reject route should succeed.');
 assertSame(
@@ -30,6 +34,8 @@ assertSame(
     'Pending tab should no longer contain the rejected event.',
 );
 
+// Galutinis integracijos patikrinimas: būsena ir atmetimo priežastis
+// turi būti realiai išsaugotos duomenų bazėje.
 $event = fetchEventRecord($pdo, 101);
 assertSame('rejected', $event['status'], 'Event should be persisted as rejected.');
 assertSame(
