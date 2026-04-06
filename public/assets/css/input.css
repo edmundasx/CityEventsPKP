@@ -65,19 +65,36 @@
         @apply absolute inset-0 z-[1] opacity-35 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.12),rgba(0,0,0,0.58)_68%)];
     }
 
-    /* search — TESTING: all pointer-events none so map receives every interaction */
+    /* search: outer wrap passes clicks to map; bar + fields use pointer-events auto */
     .search-wrap {
         @apply mx-auto mt-8 max-w-3xl pointer-events-none;
     }
     .search-bar {
-        @apply flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row pointer-events-none;
+        @apply pointer-events-auto flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+    }
+    .search-field-wrap {
+        @apply relative z-[75] min-w-0 flex-1;
     }
     .search-input {
         @apply w-full rounded-xl bg-white/90 px-4 py-3 text-slate-900 placeholder:text-slate-500
-               outline-none ring-0 focus:ring-4 focus:ring-white/30 pointer-events-none;
+               outline-none ring-0 focus:ring-4 focus:ring-white/30;
     }
     .search-btn {
-        @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition pointer-events-none;
+        @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition;
+    }
+    .search-dropdown {
+        @apply absolute left-0 right-0 top-full z-[90] -mt-0.5 max-h-60 overflow-y-auto rounded-b-xl border border-slate-200 border-t-0
+               bg-white py-1 text-left text-sm text-slate-800 shadow-2xl;
+        opacity: 1;
+    }
+    .search-dropdown li {
+        @apply cursor-pointer px-3 py-2 hover:bg-slate-100;
+    }
+    .search-suggest-title {
+        @apply block font-medium;
+    }
+    .search-suggest-sub {
+        @apply mt-0.5 block text-xs text-slate-500;
     }
     /* categories */
     .cats-grid,
@@ -1116,4 +1133,10 @@
 /* TEST OVERRIDE: only map + selected search controls accept pointer input */
 .hero, .hero * { pointer-events: none !important; }
 #homeHeroMap, #homeHeroMap * { pointer-events: auto !important; }
-#searchInput, #locationInput, .search-btn { pointer-events: auto !important; }
+#searchInput,
+#locationInput,
+.search-btn,
+.search-bar,
+.search-field-wrap,
+.search-dropdown,
+.search-dropdown * { pointer-events: auto !important; }

@@ -6,6 +6,9 @@
     showAll: false,
   };
 
+  const MAX_EVENT_SUGGESTIONS = 8;
+  const MAX_PLACE_SUGGESTIONS = 12;
+
   const mapState = {
     map: null,
     markersLayer: null,
@@ -32,9 +35,22 @@
     const cards = getCards(gridEl);
     const eventsById = new Map(events.map((event) => [String(event.id), event]));
 
+    const heroEl = mapEl.closest(".hero");
+    const searchIndex = parseSearchIndex(
+      heroEl?.dataset?.searchIndex || "[]",
+    );
+    const ltPlaces = parseLtPlaces(heroEl?.dataset?.ltPlaces || "[]");
+
     decorateCards(cards, eventsById);
     initLeafletMap(mapEl, events);
-    bindInputs(cards, eventsById, initialVisible, toggleBtn);
+    bindInputs(
+      cards,
+      eventsById,
+      initialVisible,
+      toggleBtn,
+      searchIndex,
+      ltPlaces,
+    );
     applyFilters(cards, eventsById, initialVisible, toggleBtn);
   }
 
@@ -42,6 +58,24 @@
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  }
+
+  function parseSearchIndex(raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  }
+
+  function parseLtPlaces(raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
     } catch (_error) {
       return [];
     }
@@ -63,43 +97,246 @@
       card.dataset.category = normalize(event.category || "");
       card.dataset.location = normalize(event.location || "");
       card.dataset.title = normalize(event.title || "");
+      card.dataset.organizer = normalize(event.organizer_name || "");
+      card.dataset.tags = String(event.tags || "");
     });
   }
 
-  function bindInputs(cards, eventsById, initialVisible, toggleBtn) {
+  function bindInputs(
+    cards,
+    eventsById,
+    initialVisible,
+    toggleBtn,
+    searchIndex,
+    ltPlaces,
+  ) {
     const searchInput = document.getElementById("searchInput");
     const locationInput = document.getElementById("locationInput");
+    const searchList = document.getElementById("searchSuggestions");
+    const locationList = document.getElementById("locationSuggestions");
     const categoryButtons = Array.from(
       document.querySelectorAll(".cat-btn[data-category], .category[data-category]"),
     );
 
+    function commitFromInputs() {
+      state.query = searchInput?.value.trim() || "";
+      state.location = locationInput?.value.trim() || "";
+      hideSuggestionLists();
+      applyFilters(cards, eventsById, initialVisible, toggleBtn);
+    }
+
+    function hideSuggestionLists() {
+      if (searchList) {
+        searchList.hidden = true;
+        searchList.innerHTML = "";
+      }
+      if (locationList) {
+        locationList.hidden = true;
+        locationList.innerHTML = "";
+      }
+      if (searchInput) {
+        searchInput.setAttribute("aria-expanded", "false");
+      }
+      if (locationInput) {
+        locationInput.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    function searchSuggestAllowed() {
+      return (
+        searchInput &&
+        document.activeElement === searchInput &&
+        searchInput.value.trim().length > 0
+      );
+    }
+
+    function locationSuggestAllowed() {
+      return (
+        locationInput &&
+        document.activeElement === locationInput &&
+        locationInput.value.trim().length > 0
+      );
+    }
+
+    function eventRowMatchesQuery(row, q) {
+      if (!q) return false;
+      const parts = [
+        row.title,
+        row.organizer_name,
+        row.location,
+        row.category,
+        row.district,
+        row.tags,
+      ];
+      for (const part of parts) {
+        if (normalize(part || "").includes(q)) {
+          return true;
+        }
+      }
+      const rawTags = String(row.tags || "").trim();
+      if (rawTags) {
+        const tagParts = rawTags.split(/[,;]+/);
+        for (const t of tagParts) {
+          if (normalize(t.trim()).includes(q)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function renderSearchSuggestions() {
+      if (!searchInput || !searchList) return;
+      searchList.innerHTML = "";
+      if (!searchSuggestAllowed()) {
+        searchList.hidden = true;
+        searchInput.setAttribute("aria-expanded", "false");
+        return;
+      }
+      const q = normalize(searchInput.value.trim());
+      if (!q) {
+        searchList.hidden = true;
+        searchInput.setAttribute("aria-expanded", "false");
+        return;
+      }
+      const rows = searchIndex.filter((row) => eventRowMatchesQuery(row, q));
+      const uniqueTitles = [];
+      const seen = new Set();
+      for (const row of rows) {
+        const title = String(row?.title || "").trim();
+        const key = normalize(title);
+        if (!title || seen.has(key)) continue;
+        seen.add(key);
+        uniqueTitles.push(title);
+        if (uniqueTitles.length >= MAX_EVENT_SUGGESTIONS) break;
+      }
+      const limited = uniqueTitles;
+      if (!limited.length) {
+        searchList.hidden = true;
+        searchInput.setAttribute("aria-expanded", "false");
+        return;
+      }
+      limited.forEach((title) => {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.innerHTML = `<span class="search-suggest-title">${escapeHtml(title)}</span>`;
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          searchInput.value = title;
+          commitFromInputs();
+        });
+        searchList.appendChild(li);
+      });
+      searchList.hidden = false;
+      searchInput.setAttribute("aria-expanded", "true");
+    }
+
+    function renderLocationSuggestions() {
+      if (!locationInput || !locationList) return;
+      locationList.innerHTML = "";
+      if (!locationSuggestAllowed()) {
+        locationList.hidden = true;
+        locationInput.setAttribute("aria-expanded", "false");
+        return;
+      }
+      const q = normalize(locationInput.value.trim());
+      if (!q) {
+        locationList.hidden = true;
+        locationInput.setAttribute("aria-expanded", "false");
+        return;
+      }
+      const matches = ltPlaces
+        .filter((place) => normalize(place).includes(q))
+        .slice(0, MAX_PLACE_SUGGESTIONS);
+      if (!matches.length) {
+        locationList.hidden = true;
+        locationInput.setAttribute("aria-expanded", "false");
+        return;
+      }
+      matches.forEach((place) => {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.textContent = place;
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          locationInput.value = place;
+          commitFromInputs();
+        });
+        locationList.appendChild(li);
+      });
+      locationList.hidden = false;
+      locationInput.setAttribute("aria-expanded", "true");
+    }
+
     if (searchInput) {
+      searchInput.addEventListener("focus", () => {
+        renderSearchSuggestions();
+      });
+
       searchInput.addEventListener("input", () => {
-        state.query = searchInput.value.trim();
-        applyFilters(cards, eventsById, initialVisible, toggleBtn);
+        renderSearchSuggestions();
       });
 
       searchInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          state.query = searchInput.value.trim();
-          applyFilters(cards, eventsById, initialVisible, toggleBtn);
+        if (event.key === "Escape") {
+          hideSuggestionLists();
+          return;
         }
+        if (event.key === "Enter") {
+          event.preventDefault();
+          commitFromInputs();
+        }
+      });
+
+      searchInput.addEventListener("blur", () => {
+        setTimeout(() => {
+          if (searchList && !searchList.matches(":hover")) {
+            searchList.hidden = true;
+            searchList.innerHTML = "";
+            searchInput.setAttribute("aria-expanded", "false");
+          }
+        }, 150);
       });
     }
 
     if (locationInput) {
+      locationInput.addEventListener("focus", () => {
+        renderLocationSuggestions();
+      });
+
       locationInput.addEventListener("input", () => {
-        state.location = locationInput.value.trim();
-        applyFilters(cards, eventsById, initialVisible, toggleBtn);
+        renderLocationSuggestions();
       });
 
       locationInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          hideSuggestionLists();
+          return;
+        }
         if (event.key === "Enter") {
-          state.location = locationInput.value.trim();
-          applyFilters(cards, eventsById, initialVisible, toggleBtn);
+          event.preventDefault();
+          commitFromInputs();
         }
       });
+
+      locationInput.addEventListener("blur", () => {
+        setTimeout(() => {
+          if (locationList && !locationList.matches(":hover")) {
+            locationList.hidden = true;
+            locationList.innerHTML = "";
+            locationInput.setAttribute("aria-expanded", "false");
+          }
+        }, 150);
+      });
     }
+
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof Node)) return;
+      if (searchInput?.contains(t) || searchList?.contains(t)) return;
+      if (locationInput?.contains(t) || locationList?.contains(t)) return;
+      hideSuggestionLists();
+    });
 
     categoryButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -124,9 +361,7 @@
     syncCategoryButtonState(categoryButtons);
 
     window.searchEvents = () => {
-      state.query = searchInput?.value.trim() || "";
-      state.location = locationInput?.value.trim() || "";
-      applyFilters(cards, eventsById, initialVisible, toggleBtn);
+      commitFromInputs();
     };
 
     window.filterByCategory = (category) => {
@@ -173,11 +408,20 @@
         event?.location || card.dataset.location || "",
       );
       const itemCategory = normalize(event?.category || card.dataset.category || "");
+      const haystackOrganizer = normalize(
+        event?.organizer_name || card.dataset.organizer || "",
+      );
+      const haystackDistrict = normalize(event?.district || "");
+      const tagsRaw = String(event?.tags ?? card.dataset.tags ?? "");
 
       const matchesQuery =
         !query ||
         haystackTitle.includes(query) ||
-        haystackLocation.includes(query);
+        haystackLocation.includes(query) ||
+        haystackOrganizer.includes(query) ||
+        itemCategory.includes(query) ||
+        haystackDistrict.includes(query) ||
+        tagsMatch(query, tagsRaw);
       const matchesLocation = !location || haystackLocation.includes(location);
       const matchesCategory = !category || categoryMatches(itemCategory, category);
       const matchesFilters = matchesQuery && matchesLocation && matchesCategory;
@@ -310,6 +554,14 @@
 
   function normalize(value) {
     return String(value || "").trim().toLowerCase();
+  }
+
+  function tagsMatch(query, tagsRaw) {
+    if (!query) return true;
+    const raw = String(tagsRaw || "").trim();
+    if (!raw) return false;
+    if (normalize(raw).includes(query)) return true;
+    return raw.split(/[,;]+/).some((part) => normalize(part.trim()).includes(query));
   }
 
   function escapeHtml(value) {

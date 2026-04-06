@@ -21,10 +21,28 @@ final class EventRepository
             ? "AND e.event_date >= DATE_SUB(NOW(), INTERVAL :lookback_hours HOUR)"
             : "";
         $limitClause = $limit !== null ? "LIMIT :limit" : "";
+        $columns = $this->eventColumns();
 
         $sql = "
-            SELECT e.id, e.title, e.location, e.event_date, e.price, e.cover_image
+            SELECT
+                e.id,
+                e.title,
+                e.location,
+                e.event_date,
+                e.price,
+                e.cover_image,
+                u.name AS organizer_name,
+                " .
+            $this->selectColumn($columns, "category") .
+            ",
+                " .
+            $this->selectColumn($columns, "district") .
+            ",
+                " .
+            $this->selectColumn($columns, "tags") .
+            "
             FROM events e
+            LEFT JOIN users u ON u.id = e.organizer_id
             WHERE e.status = 'approved'
             {$futureClause}
             ORDER BY e.event_date ASC
@@ -63,6 +81,10 @@ final class EventRepository
                 "location" => (string) $r["location"],
                 "price" => $priceLabel,
                 "image" => (string) ($r["cover_image"] ?? ""),
+                "organizer_name" => (string) ($r["organizer_name"] ?? ""),
+                "category" => (string) ($r["category"] ?? ""),
+                "district" => (string) ($r["district"] ?? ""),
+                "tags" => (string) ($r["tags"] ?? ""),
             ];
         }, $rows);
     }
@@ -85,11 +107,15 @@ final class EventRepository
                 e.location,
                 e.event_date,
                 e.price,
+                u.name AS organizer_name,
                 " .
             $this->selectColumn($columns, "category") .
             ",
                 " .
             $this->selectColumn($columns, "district") .
+            ",
+                " .
+            $this->selectColumn($columns, "tags") .
             ",
                 " .
             $this->selectColumn($columns, "lat") .
@@ -99,6 +125,7 @@ final class EventRepository
             ",
                 e.cover_image
             FROM events e
+            LEFT JOIN users u ON u.id = e.organizer_id
             WHERE e.status = 'approved'
             {$futureClause}
             ORDER BY e.event_date ASC
@@ -133,6 +160,8 @@ final class EventRepository
                 "is_free" => $price <= 0.0,
                 "category" => (string) ($r["category"] ?? ""),
                 "district" => (string) ($r["district"] ?? ""),
+                "organizer_name" => (string) ($r["organizer_name"] ?? ""),
+                "tags" => (string) ($r["tags"] ?? ""),
                 "lat" => $lat === null ? null : (float) $lat,
                 "lng" => $lng === null ? null : (float) $lng,
                 "cover_image" => (string) ($r["cover_image"] ?? ""),

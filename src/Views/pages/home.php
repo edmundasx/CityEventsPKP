@@ -10,6 +10,9 @@ if ($homeMapJson === false) {
     $homeMapJson = "[]";
 }
 
+$searchIndexJson = $searchIndexJson ?? "[]";
+$ltPlacesJson = $ltPlacesJson ?? "[]";
+
 $e = static fn($value) => htmlspecialchars(
     (string) $value,
     ENT_QUOTES,
@@ -17,7 +20,11 @@ $e = static fn($value) => htmlspecialchars(
 );
 ?>
 
-<section class="hero">
+<section
+  class="hero"
+  data-search-index="<?= $e($searchIndexJson) ?>"
+  data-lt-places="<?= $e($ltPlacesJson) ?>"
+>
   <div
     id="homeHeroMap"
     class="home-hero-map-bg"
@@ -36,11 +43,45 @@ $e = static fn($value) => htmlspecialchars(
 
         <div class="search-wrap">
           <div class="search-bar">
-            <input id="searchInput" type="text" placeholder="Search events" class="search-input">
-            <input id="locationInput" type="text" placeholder="Location" class="search-input">
+            <div class="search-field-wrap">
+              <input
+                id="searchInput"
+                type="search"
+                autocomplete="off"
+                placeholder="Ieškoti renginių"
+                class="search-input"
+                aria-autocomplete="list"
+                aria-controls="searchSuggestions"
+                aria-expanded="false"
+              >
+              <ul
+                id="searchSuggestions"
+                class="search-dropdown"
+                role="listbox"
+                hidden
+              ></ul>
+            </div>
+            <div class="search-field-wrap">
+              <input
+                id="locationInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Miestas"
+                class="search-input"
+                aria-autocomplete="list"
+                aria-controls="locationSuggestions"
+                aria-expanded="false"
+              >
+              <ul
+                id="locationSuggestions"
+                class="search-dropdown"
+                role="listbox"
+                hidden
+              ></ul>
+            </div>
 
             <button type="button" onclick="searchEvents()" class="search-btn">
-              Search
+              Ieškoti
             </button>
           </div>
         </div>
