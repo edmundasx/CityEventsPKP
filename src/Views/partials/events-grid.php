@@ -2,11 +2,13 @@
 // events-grid.php (partial)
 
 // Inputs (optional, can be overridden by the parent view)
+
 $events = $events ?? [];
 $gridId = $gridId ?? "eventsGrid";
 $gridClass = $gridClass ?? "events-grid";
 $emptyText = $emptyText ?? "Events nerasti";
 $basePath = $basePath ?? "/events";
+$gridExtraClass = $gridExtraClass ?? "";
 
 // Escape helper (prevents XSS)
 $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");

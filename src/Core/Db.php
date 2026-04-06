@@ -6,6 +6,8 @@ namespace App\Core;
 use PDO;
 
 final class Db
+
+    
 {
     private static ?PDO $pdo = null;
 
@@ -28,5 +30,13 @@ final class Db
         ]);
 
         return self::$pdo;
+    }
+
+    /**
+     * For testing: inject a PDO instance to override the default connection.
+     */
+    public static function setPdo(PDO $pdo): void
+    {
+        self::$pdo = $pdo;
     }
 }
