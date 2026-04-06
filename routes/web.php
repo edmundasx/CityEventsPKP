@@ -59,7 +59,5 @@ return function (Router $router): void {
         new RoleMiddleware(["admin"]),
     ]);
 
-    // Events (optional, keep if you have these controllers)
-    $router->get("/events", "EventController@index");
     $router->get("/events/{id:\d+}", "EventController@show");
 };

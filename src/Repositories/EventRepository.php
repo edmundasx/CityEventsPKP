@@ -13,10 +13,11 @@ final class EventRepository
     public function __construct(private PDO $pdo) {}
 
     public function homepageEvents(
-        int $limit = 12,
+        ?int $limit = 12,
         bool $onlyFuture = true,
     ): array {
         $futureClause = $onlyFuture ? "AND e.event_date >= NOW()" : "";
+        $limitClause = $limit !== null ? "LIMIT :limit" : "";
 
         $sql = "
             SELECT e.id, e.title, e.location, e.event_date, e.price, e.cover_image
@@ -24,11 +25,13 @@ final class EventRepository
             WHERE e.status = 'approved'
             {$futureClause}
             ORDER BY e.event_date ASC
-            LIMIT :limit
+            {$limitClause}
         ";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+        if ($limit !== null) {
+            $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+        }
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -21,7 +21,7 @@ final class HomeController
         $enableLoginModal = true;
 
         $repo = new EventRepository(Db::pdo());
-        $events = $repo->homepageEvents(12, true); // only future approved events
+        $events = $repo->homepageEvents(null, true); // all future approved events
         $mapEvents = $repo->mapEvents(true);
 
         $mapById = [];
@@ -49,10 +49,6 @@ final class HomeController
                 "category" => (string) ($event["category"] ?? ""),
                 "lat" => isset($event["lat"]) ? (float) $event["lat"] : null,
                 "lng" => isset($event["lng"]) ? (float) $event["lng"] : null,
-                "url" =>
-                    $base .
-                    "/events/" .
-                    rawurlencode((string) ($event["id"] ?? 0)),
             ],
             $events,
         );

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $base = $base ?? "";
 $container = "container-ce";
 $homeMapEvents = $homeMapEvents ?? [];
@@ -79,13 +79,24 @@ $e = static fn($value) => htmlspecialchars(
       <h2 class="section-title">Events tavo mieste</h2>
       <p class="section-subtitle">Discover the most interesting happenings near you</p>
     </div>
+  </div>
 
-    <a href="<?= $e($base) ?>/events" class="section-action">View all</a>
+  <div class="mt-4 flex justify-end">
+    <button
+      id="homeEventsToggle"
+      type="button"
+      class="section-action"
+      aria-expanded="false"
+    >
+      View all
+    </button>
   </div>
 
   <?php
   $gridId = "eventsGrid";
   $gridClass = "events-grid";
+  $gridExtraClass = "mt-6";
+  $gridInitialVisible = 3;
   $emptyText = "Events nerasti";
   $basePath = ($base ?? "") . "/events";
   $events = $events ?? [];

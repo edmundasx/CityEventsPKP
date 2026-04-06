@@ -20,7 +20,7 @@ final class MapController
         $repo = new EventRepository(Db::pdo());
         $events = $repo->mapEvents(true);
         $breadcrumbs = [
-            ["label" => "Events", "href" => $base . "/events"],
+            ["label" => "Events", "href" => $base . "/home#events"],
             ["label" => "Map", "href" => $base . "/map"],
         ];
 

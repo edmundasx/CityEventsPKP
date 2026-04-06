@@ -3,6 +3,7 @@
     query: "",
     location: "",
     category: "",
+    showAll: false,
   };
 
   const mapState = {
@@ -23,6 +24,8 @@
     const mapEl = document.getElementById("homeHeroMap");
     const gridEl = document.getElementById("eventsGrid");
     if (!mapEl || !gridEl) return;
+    const initialVisible = Number(gridEl.dataset.initialVisible || 0);
+    const toggleBtn = document.getElementById("homeEventsToggle");
 
     const events = parseEvents(mapEl.dataset.events || "[]");
     const cards = getCards(gridEl);
@@ -30,8 +33,8 @@
 
     decorateCards(cards, eventsById);
     initLeafletMap(mapEl, events);
-    bindInputs(cards, eventsById);
-    applyFilters(cards, eventsById);
+    bindInputs(cards, eventsById, initialVisible, toggleBtn);
+    applyFilters(cards, eventsById, initialVisible, toggleBtn);
   }
 
   function parseEvents(raw) {
@@ -62,7 +65,7 @@
     });
   }
 
-  function bindInputs(cards, eventsById) {
+  function bindInputs(cards, eventsById, initialVisible, toggleBtn) {
     const searchInput = document.getElementById("searchInput");
     const locationInput = document.getElementById("locationInput");
     const categoryButtons = Array.from(
@@ -72,13 +75,13 @@
     if (searchInput) {
       searchInput.addEventListener("input", () => {
         state.query = searchInput.value.trim();
-        applyFilters(cards, eventsById);
+        applyFilters(cards, eventsById, initialVisible, toggleBtn);
       });
 
       searchInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           state.query = searchInput.value.trim();
-          applyFilters(cards, eventsById);
+          applyFilters(cards, eventsById, initialVisible, toggleBtn);
         }
       });
     }
@@ -86,13 +89,13 @@
     if (locationInput) {
       locationInput.addEventListener("input", () => {
         state.location = locationInput.value.trim();
-        applyFilters(cards, eventsById);
+        applyFilters(cards, eventsById, initialVisible, toggleBtn);
       });
 
       locationInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           state.location = locationInput.value.trim();
-          applyFilters(cards, eventsById);
+          applyFilters(cards, eventsById, initialVisible, toggleBtn);
         }
       });
     }
@@ -107,7 +110,7 @@
         }
 
         syncCategoryButtonState(categoryButtons);
-        applyFilters(cards, eventsById);
+        applyFilters(cards, eventsById, initialVisible, toggleBtn);
       });
 
       button.addEventListener("keydown", (event) => {
@@ -122,15 +125,22 @@
     window.searchEvents = () => {
       state.query = searchInput?.value.trim() || "";
       state.location = locationInput?.value.trim() || "";
-      applyFilters(cards, eventsById);
+      applyFilters(cards, eventsById, initialVisible, toggleBtn);
     };
 
     window.filterByCategory = (category) => {
       const normalized = normalize(category || "");
       state.category = state.category === normalized ? "" : normalized;
       syncCategoryButtonState(categoryButtons);
-      applyFilters(cards, eventsById);
+      applyFilters(cards, eventsById, initialVisible, toggleBtn);
     };
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => {
+        state.showAll = !state.showAll;
+        applyFilters(cards, eventsById, initialVisible, toggleBtn);
+      });
+    }
   }
 
   function syncCategoryButtonState(buttons) {
@@ -140,12 +150,13 @@
     });
   }
 
-  function applyFilters(cards, eventsById) {
+  function applyFilters(cards, eventsById, initialVisible, toggleBtn) {
     const query = normalize(state.query);
     const location = normalize(state.location);
     const category = normalize(state.category);
 
     const visibleIds = new Set();
+    let matchedCount = 0;
 
     cards.forEach((card) => {
       const id = card.dataset.eventId || getCardEventId(card);
@@ -167,8 +178,14 @@
         haystackLocation.includes(query);
       const matchesLocation = !location || haystackLocation.includes(location);
       const matchesCategory = !category || categoryMatches(itemCategory, category);
+      const matchesFilters = matchesQuery && matchesLocation && matchesCategory;
 
-      const isVisible = matchesQuery && matchesLocation && matchesCategory;
+      let isVisible = false;
+      if (matchesFilters) {
+        const withinInitialLimit = initialVisible <= 0 || matchedCount < initialVisible;
+        isVisible = state.showAll || withinInitialLimit;
+        matchedCount += 1;
+      }
       card.hidden = !isVisible;
 
       if (isVisible) {
@@ -176,7 +193,23 @@
       }
     });
 
+    updateToggleButton(toggleBtn, initialVisible, matchedCount);
     updateMapMarkers(visibleIds);
+  }
+
+  function updateToggleButton(toggleBtn, initialVisible, matchedCount) {
+    if (!toggleBtn) return;
+    if (initialVisible <= 0 || matchedCount <= initialVisible) {
+      toggleBtn.hidden = true;
+      return;
+    }
+
+    toggleBtn.hidden = false;
+    const expanded = state.showAll;
+    toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    toggleBtn.textContent = expanded
+      ? `Show less (${initialVisible})`
+      : `View all (${matchedCount})`;
   }
 
   function categoryMatches(itemCategory, selectedCategory) {
@@ -237,14 +270,12 @@
     const title = escapeHtml(event.title || "");
     const location = escapeHtml(event.location || "");
     const date = escapeHtml([event.date || "", event.time || ""].join(" ").trim());
-    const url = escapeHtml(event.url || "#");
 
     return [
       '<div class="home-map-popup">',
       `<div class="home-map-popup-title">${title}</div>`,
       `<div class="home-map-popup-meta">${location}</div>`,
       `<div class="home-map-popup-meta">${date}</div>`,
-      `<a class="home-map-popup-link" href="${url}">View</a>`,
       "</div>",
     ].join("");
   }
