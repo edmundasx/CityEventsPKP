@@ -47,4 +47,6 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Run PHP test suite
-        run: composer test
+        run: |
+          php tests/AdminEventModerationRulesTest.php
+          php tests/AdminEventRejectionRulesTest.php

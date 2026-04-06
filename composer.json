@@ -6,6 +6,10 @@
     }
   },
   "scripts": {
+    "test": [
+      "@test:cpg-70",
+      "@test:cpg-71"
+    ],
     "test:cpg-70": "php tests/AdminEventModerationRulesTest.php",
     "test:cpg-71": "php tests/AdminEventRejectionRulesTest.php"
   },
