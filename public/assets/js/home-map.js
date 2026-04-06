@@ -26,6 +26,7 @@
     if (!mapEl || !gridEl) return;
     const initialVisible = Number(gridEl.dataset.initialVisible || 0);
     const toggleBtn = document.getElementById("homeEventsToggle");
+    state.showAll = gridEl.dataset.startExpanded === "1";
 
     const events = parseEvents(mapEl.dataset.events || "[]");
     const cards = getCards(gridEl);
@@ -155,7 +156,7 @@
     const location = normalize(state.location);
     const category = normalize(state.category);
 
-    const visibleIds = new Set();
+    const matchedIds = new Set();
     let matchedCount = 0;
 
     cards.forEach((card) => {
@@ -182,29 +183,31 @@
 
       let isVisible = false;
       if (matchesFilters) {
+        matchedIds.add(String(id));
         const withinInitialLimit = initialVisible <= 0 || matchedCount < initialVisible;
         isVisible = state.showAll || withinInitialLimit;
         matchedCount += 1;
       }
       card.hidden = !isVisible;
 
-      if (isVisible) {
-        visibleIds.add(String(id));
-      }
     });
 
     updateToggleButton(toggleBtn, initialVisible, matchedCount);
-    updateMapMarkers(visibleIds);
+    // Markers follow search/category filters, not view-all/show-less UI state.
+    updateMapMarkers(matchedIds);
   }
 
   function updateToggleButton(toggleBtn, initialVisible, matchedCount) {
     if (!toggleBtn) return;
+    toggleBtn.hidden = false;
     if (initialVisible <= 0 || matchedCount <= initialVisible) {
-      toggleBtn.hidden = true;
+      toggleBtn.disabled = true;
+      toggleBtn.setAttribute("aria-expanded", "false");
+      toggleBtn.textContent = `View all (${matchedCount})`;
       return;
     }
 
-    toggleBtn.hidden = false;
+    toggleBtn.disabled = false;
     const expanded = state.showAll;
     toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
     toggleBtn.textContent = expanded

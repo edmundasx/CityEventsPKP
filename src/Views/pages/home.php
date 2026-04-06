@@ -79,9 +79,6 @@ $e = static fn($value) => htmlspecialchars(
       <h2 class="section-title">Events tavo mieste</h2>
       <p class="section-subtitle">Discover the most interesting happenings near you</p>
     </div>
-  </div>
-
-  <div class="mt-4 flex justify-end">
     <button
       id="homeEventsToggle"
       type="button"
@@ -97,6 +94,7 @@ $e = static fn($value) => htmlspecialchars(
   $gridClass = "events-grid";
   $gridExtraClass = "mt-6";
   $gridInitialVisible = 3;
+  $gridStartExpanded = true;
   $emptyText = "Events nerasti";
   $basePath = ($base ?? "") . "/events";
   $events = $events ?? [];

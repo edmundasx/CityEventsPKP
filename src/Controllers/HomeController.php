@@ -21,8 +21,8 @@ final class HomeController
         $enableLoginModal = true;
 
         $repo = new EventRepository(Db::pdo());
-        $events = $repo->homepageEvents(null, true); // all future approved events
-        $mapEvents = $repo->mapEvents(true);
+        $events = $repo->homepageEvents(null, true, 1); // all approved events from now -1h
+        $mapEvents = $repo->mapEvents(true, 1);
 
         $mapById = [];
         foreach ($mapEvents as $event) {

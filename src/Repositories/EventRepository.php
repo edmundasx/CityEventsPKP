@@ -15,8 +15,11 @@ final class EventRepository
     public function homepageEvents(
         ?int $limit = 12,
         bool $onlyFuture = true,
+        int $lookbackHours = 0,
     ): array {
-        $futureClause = $onlyFuture ? "AND e.event_date >= NOW()" : "";
+        $futureClause = $onlyFuture
+            ? "AND e.event_date >= DATE_SUB(NOW(), INTERVAL :lookback_hours HOUR)"
+            : "";
         $limitClause = $limit !== null ? "LIMIT :limit" : "";
 
         $sql = "
@@ -29,6 +32,13 @@ final class EventRepository
         ";
 
         $stmt = $this->pdo->prepare($sql);
+        if ($onlyFuture) {
+            $stmt->bindValue(
+                ":lookback_hours",
+                max(0, $lookbackHours),
+                PDO::PARAM_INT,
+            );
+        }
         if ($limit !== null) {
             $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
         }
@@ -57,9 +67,14 @@ final class EventRepository
         }, $rows);
     }
 
-    public function mapEvents(bool $onlyFuture = true): array
+    public function mapEvents(
+        bool $onlyFuture = true,
+        int $lookbackHours = 0,
+    ): array
     {
-        $futureClause = $onlyFuture ? "AND e.event_date >= NOW()" : "";
+        $futureClause = $onlyFuture
+            ? "AND e.event_date >= DATE_SUB(NOW(), INTERVAL :lookback_hours HOUR)"
+            : "";
         $columns = $this->eventColumns();
 
         $sql =
@@ -90,6 +105,13 @@ final class EventRepository
         ";
 
         $stmt = $this->pdo->prepare($sql);
+        if ($onlyFuture) {
+            $stmt->bindValue(
+                ":lookback_hours",
+                max(0, $lookbackHours),
+                PDO::PARAM_INT,
+            );
+        }
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);

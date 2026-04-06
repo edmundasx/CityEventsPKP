@@ -6,6 +6,7 @@ $gridExtraClass = $gridExtraClass ?? "";
 $gridInitialVisible = isset($gridInitialVisible)
     ? max(0, (int) $gridInitialVisible)
     : 0;
+$gridStartExpanded = !empty($gridStartExpanded);
 $emptyText = $emptyText ?? "Events nerasti";
 $base = $base ?? rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
 if ($base === "." || $base === "/") {
@@ -20,6 +21,7 @@ $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
   id="<?= $e($gridId) ?>"
   class="<?= $e(trim($gridClass . " " . $gridExtraClass)) ?>"
   data-initial-visible="<?= $e((string) $gridInitialVisible) ?>"
+  data-start-expanded="<?= $gridStartExpanded ? "1" : "0" ?>"
 >
   <?php if (empty($events)): ?>
     <div class="events-empty"><?= $e($emptyText) ?></div>
