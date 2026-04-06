@@ -1,4 +1,4 @@
-﻿<?php $base = $base ?? ""; ?>
+<?php $base = $base ?? ""; ?>
 
 <section class="organizers-page">
   <section class="organizers-hero">

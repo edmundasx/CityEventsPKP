@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 use App\Auth\Auth;
 $base = $base ?? rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
 $enableLoginModal = (bool) ($enableLoginModal ?? true);

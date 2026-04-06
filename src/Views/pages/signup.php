@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $base = $base ?? "";
 $registerError = $registerError ?? null;
 ?>

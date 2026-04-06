@@ -1,4 +1,4 @@
-﻿<aside class="map-filters">
+<aside class="map-filters">
     <div>
         <h2 class="map-filters-title">Filters</h2>
         <p id="activeFiltersMeta" class="map-filters-meta">0 filters applied</p>

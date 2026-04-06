@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $events = is_array($events ?? null) ? $events : [];
 $flashSuccess = $flashSuccess ?? null;
 $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");

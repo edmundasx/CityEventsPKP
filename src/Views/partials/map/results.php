@@ -1,4 +1,4 @@
-﻿<section id="resultsWrap" class="map-results">
+<section id="resultsWrap" class="map-results">
     <p class="map-results-meta">Rasta <span id="resultCount"><?= isset($events)
         ? count($events)
         : 0 ?></span> events</p>

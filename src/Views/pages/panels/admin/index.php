@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $stats = $stats ?? [];
 $events = $events ?? [];
 $users = $users ?? [];
