@@ -158,6 +158,7 @@
 
     const matchedIds = new Set();
     let matchedCount = 0;
+    const emptyState = document.querySelector("#eventsGrid .js-events-empty");
 
     cards.forEach((card) => {
       const id = card.dataset.eventId || getCardEventId(card);
@@ -193,6 +194,9 @@
     });
 
     updateToggleButton(toggleBtn, initialVisible, matchedCount);
+    if (emptyState) {
+      emptyState.hidden = matchedCount !== 0;
+    }
     // Markers follow search/category filters, not view-all/show-less UI state.
     updateMapMarkers(matchedIds);
   }

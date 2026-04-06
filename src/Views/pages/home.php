@@ -25,22 +25,24 @@ $e = static fn($value) => htmlspecialchars(
   ></div>
   <div class="hero-glow"></div>
 
-  <div class="<?= $container ?> hero-inner">
-    <div class="hero-content">
-      <h1 class="hero-title">Discover events for everything you love</h1>
+  <div class="hero-inner">
+    <div class="<?= $container ?> w-full">
+      <div class="hero-content">
+        <h1 class="hero-title">Discover events for everything you love</h1>
 
-      <p class="hero-lead">
-        Find and join events, connect with organizers, or create your own event
-      </p>
+        <p class="hero-lead">
+          Find and join events, connect with organizers, or create your own event
+        </p>
 
-      <div class="search-wrap">
-        <div class="search-bar">
-          <input id="searchInput" type="text" placeholder="Search events" class="search-input">
-          <input id="locationInput" type="text" placeholder="Location" class="search-input">
+        <div class="search-wrap">
+          <div class="search-bar">
+            <input id="searchInput" type="text" placeholder="Search events" class="search-input">
+            <input id="locationInput" type="text" placeholder="Location" class="search-input">
 
-          <button type="button" onclick="searchEvents()" class="search-btn">
-            Search
-          </button>
+            <button type="button" onclick="searchEvents()" class="search-btn">
+              Search
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -95,7 +97,7 @@ $e = static fn($value) => htmlspecialchars(
   $gridExtraClass = "mt-6";
   $gridInitialVisible = 3;
   $gridStartExpanded = true;
-  $emptyText = "Events nerasti";
+  $emptyText = "Pagal pasirinktus kriterijus renginių nėra.";
   $basePath = ($base ?? "") . "/events";
   $events = $events ?? [];
 

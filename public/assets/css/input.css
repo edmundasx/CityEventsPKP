@@ -34,11 +34,16 @@
     .hero {
         @apply relative overflow-hidden bg-brand text-white min-h-[34rem];
     }
+    /* Full-width overlay so the hit target is not a narrow column (same width as content grid). */
     .hero-inner {
-        @apply relative z-10 flex min-h-[34rem] items-center justify-center py-14 pointer-events-none;
+        @apply absolute inset-0 z-10 flex items-center justify-center py-14 pointer-events-none;
+    }
+    /* Children default to pointer-events: auto — without this, the full-width inner wrapper blocks the map. */
+    .hero-inner > .container-ce {
+        pointer-events: none;
     }
     .hero-content {
-        @apply mx-auto max-w-2xl text-center pointer-events-auto;
+        @apply mx-auto max-w-2xl text-center pointer-events-none;
     }
     .hero-title {
         @apply text-3xl font-extrabold leading-tight md:text-5xl;
@@ -49,6 +54,7 @@
 
     .home-hero-map-bg {
         @apply absolute inset-0 z-0 h-full w-full;
+        pointer-events: auto;
     }
     .home-hero-map-bg .leaflet-control-container {
         @apply opacity-90;
@@ -59,19 +65,19 @@
         @apply absolute inset-0 z-[1] opacity-35 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.12),rgba(0,0,0,0.58)_68%)];
     }
 
-    /* search */
+    /* search — TESTING: all pointer-events none so map receives every interaction */
     .search-wrap {
-        @apply mx-auto mt-8 max-w-3xl;
+        @apply mx-auto mt-8 max-w-3xl pointer-events-none;
     }
     .search-bar {
-        @apply flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+        @apply flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row pointer-events-none;
     }
     .search-input {
         @apply w-full rounded-xl bg-white/90 px-4 py-3 text-slate-900 placeholder:text-slate-500
-               outline-none ring-0 focus:ring-4 focus:ring-white/30;
+               outline-none ring-0 focus:ring-4 focus:ring-white/30 pointer-events-none;
     }
     .search-btn {
-        @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition;
+        @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition pointer-events-none;
     }
     /* categories */
     .cats-grid,
@@ -203,7 +209,7 @@
         @apply text-slate-500;
     }
     .events-empty {
-        @apply rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500;
+        @apply col-span-full w-full min-h-40 flex items-center justify-center rounded-2xl bg-transparent p-6 text-center text-sm text-slate-500;
     }
     .event-image--placeholder {
         @apply h-full w-full bg-slate-200;
@@ -1105,3 +1111,9 @@
     @apply mt-3 rounded-lg border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm text-red-300;
   }
 }
+
+
+/* TEST OVERRIDE: only map + selected search controls accept pointer input */
+.hero, .hero * { pointer-events: none !important; }
+#homeHeroMap, #homeHeroMap * { pointer-events: auto !important; }
+#searchInput, #locationInput, .search-btn { pointer-events: auto !important; }

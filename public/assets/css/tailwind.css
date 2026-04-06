@@ -303,18 +303,23 @@
     min-height: 34rem;
   }
   .hero-inner {
-    position: relative;
+    position: absolute;
+    inset: calc(var(--spacing) * 0);
     z-index: 10;
     display: flex;
-    min-height: 34rem;
     align-items: center;
     justify-content: center;
     padding-block: calc(var(--spacing) * 14);
+    pointer-events: none;
+  }
+  .hero-inner > .container-ce {
+    pointer-events: none;
   }
   .hero-content {
     margin-inline: auto;
     max-width: var(--container-2xl);
     text-align: left;
+    pointer-events: none;
   }
   .hero-title {
     font-size: var(--text-3xl);
@@ -345,6 +350,7 @@
     z-index: 0;
     height: 100%;
     width: 100%;
+    pointer-events: auto;
   }
   .home-hero-map-bg .leaflet-control-container {
     opacity: 90%;
@@ -361,6 +367,7 @@
     margin-inline: auto;
     margin-top: calc(var(--spacing) * 8);
     max-width: var(--container-3xl);
+    pointer-events: none;
   }
   .search-bar {
     display: flex;
@@ -378,6 +385,7 @@
     @media (width >= 48rem) {
       flex-direction: row;
     }
+    pointer-events: none;
   }
   .search-input {
     width: 100%;
@@ -406,6 +414,7 @@
         --tw-ring-color: color-mix(in oklab, var(--color-white) 30%, transparent);
       }
     }
+    pointer-events: none;
   }
   .search-btn {
     width: 100%;
@@ -430,6 +439,7 @@
     @media (width >= 48rem) {
       width: auto;
     }
+    pointer-events: none;
   }
   .cats-grid,
   .categories-content {
@@ -766,11 +776,14 @@
     color: var(--color-slate-500);
   }
   .events-empty {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: calc(var(--spacing) * 40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--radius-2xl);
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-    border-color: var(--color-slate-200);
-    background-color: var(--color-white);
+    background-color: transparent;
     padding: calc(var(--spacing) * 6);
     text-align: center;
     font-size: var(--text-sm);
@@ -2564,3 +2577,9 @@
 .auth-modal-input:focus { border-color: var(--color-brand); }
 .auth-modal-submit { margin-top: calc(var(--spacing) * 2); width: 100%; }
 .auth-modal-error { margin-top: calc(var(--spacing) * 3); border-radius: var(--radius-lg); border-style: var(--tw-border-style); border-width: 1px; border-color: color-mix(in oklab, var(--color-red-300) 30%, transparent); background-color: color-mix(in oklab, var(--color-red-300) 10%, transparent); padding-inline: calc(var(--spacing) * 3); padding-block: calc(var(--spacing) * 2); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); color: var(--color-red-300); }
+
+
+/* TEST OVERRIDE: only map + selected search controls accept pointer input */
+.hero, .hero * { pointer-events: none !important; }
+#homeHeroMap, #homeHeroMap * { pointer-events: auto !important; }
+#searchInput, #locationInput, .search-btn { pointer-events: auto !important; }

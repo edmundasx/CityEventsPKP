@@ -24,7 +24,7 @@ $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
   data-start-expanded="<?= $gridStartExpanded ? "1" : "0" ?>"
 >
   <?php if (empty($events)): ?>
-    <div class="events-empty"><?= $e($emptyText) ?></div>
+    <div class="events-empty js-events-empty"><?= $e($emptyText) ?></div>
   <?php else: ?>
     <?php foreach ($events as $index => $event): ?>
       <?php
@@ -66,5 +66,6 @@ $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
         </div>
       </a>
     <?php endforeach; ?>
+    <div class="events-empty js-events-empty" hidden><?= $e($emptyText) ?></div>
   <?php endif; ?>
 </div>
