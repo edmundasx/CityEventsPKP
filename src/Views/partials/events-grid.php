@@ -6,7 +6,11 @@ $events = $events ?? [];
 $gridId = $gridId ?? "eventsGrid";
 $gridClass = $gridClass ?? "events-grid";
 $emptyText = $emptyText ?? "Events nerasti";
-$basePath = $basePath ?? "/events";
+$base = $base ?? rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
+if ($base === "." || $base === "/") {
+    $base = "";
+}
+$basePath = $basePath ?? ($base . "/events");
 
 // Escape helper (prevents XSS)
 $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
