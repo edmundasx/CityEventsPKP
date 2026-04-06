@@ -99,3 +99,4 @@ $e = static fn($value) => htmlspecialchars(
   require $partial;
   ?>
 </section>
+

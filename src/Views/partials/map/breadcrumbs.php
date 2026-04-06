@@ -1,8 +1,8 @@
 ﻿<nav class="map-breadcrumbs">
     <ol class="map-breadcrumbs-list">
         <li>
-            <a class="map-breadcrumb-link" href="<?= $base ??
-                "/" ?>">Home</a>
+            <a class="map-breadcrumb-link" href="<?= ($base ?? "") .
+                "/home" ?>">Home</a>
         </li>
         <li class="map-breadcrumb-separator">/</li>
         <li>
