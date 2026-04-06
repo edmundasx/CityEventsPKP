@@ -8,13 +8,15 @@ use App\Repositories\EventRepository;
 
 final class EventController
 {
-    public function index(): void
+    private function getBaseUrl(): string
     {
         $base = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? ""), "/");
-        if ($base === "" || $base === "." || $base === "/") {
-            $base = "";
-        }
+        return ($base === "" || $base === "." || $base === "/") ? "" : $base;
+    }
 
+    public function index(): void
+    {
+        $base = $this->getBaseUrl();
         $title = "Events";
         $view = __DIR__ . "/../Views/pages/events.php";
         $enableLoginModal = true;
@@ -27,15 +29,12 @@ final class EventController
 
     public function show(int $id): void
     {
-        $base = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? ""), "/");
-        if ($base === "" || $base === "." || $base === "/") {
-            $base = "";
-        }
+        $base = $this->getBaseUrl();
 
         $repo = new EventRepository(Db::pdo());
         $event = $repo->findById($id);
 
-        if ($event === null) {
+        if ($event === null || $id <= 0) {
             http_response_code(404);
             echo "Event not found";
             return;
@@ -48,4 +47,3 @@ final class EventController
         require __DIR__ . "/../Views/layouts/main.php";
     }
 }
-

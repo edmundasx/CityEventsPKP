@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 use App\Auth\Auth;
 
 $authUser = Auth::user() ?? [];
@@ -63,7 +63,7 @@ $returnTo = $base . "/user/panel?rec_page=" . $recPage;
         <article class="user-card">
           <div class="user-card-head">
             <h3>&#11088; Recommended events</h3>
-            <a href="<?= $base ?>/events" class="user-link-muted">See all</a>
+            <a href="<?= $base ?>/home#events" class="user-link-muted">See all</a>
           </div>
 
           <?php if (empty($recommendedEvents)): ?>

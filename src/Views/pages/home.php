@@ -10,6 +10,10 @@ if ($homeMapJson === false) {
     $homeMapJson = "[]";
 }
 
+$searchIndexJson = $searchIndexJson ?? "[]";
+$ltPlacesJson = $ltPlacesJson ?? "[]";
+$ltMapTargetsJson = $ltMapTargetsJson ?? "[]";
+
 $e = static fn($value) => htmlspecialchars(
     (string) $value,
     ENT_QUOTES,
@@ -17,7 +21,13 @@ $e = static fn($value) => htmlspecialchars(
 );
 ?>
 
-<section class="hero">
+<section
+  class="hero"
+  data-app-base="<?= $e($base ?? '') ?>"
+  data-search-index="<?= $e($searchIndexJson) ?>"
+  data-lt-places="<?= $e($ltPlacesJson) ?>"
+  data-lt-map-targets="<?= $e($ltMapTargetsJson) ?>"
+>
   <div
     id="homeHeroMap"
     class="home-hero-map-bg"
@@ -25,22 +35,58 @@ $e = static fn($value) => htmlspecialchars(
   ></div>
   <div class="hero-glow"></div>
 
-  <div class="<?= $container ?> hero-inner">
-    <div class="hero-content">
-      <h1 class="hero-title">Discover events for everything you love</h1>
+  <div class="hero-inner">
+    <div class="<?= $container ?> w-full">
+      <div class="hero-content">
+        <h1 class="hero-title">Discover events for everything you love</h1>
 
-      <p class="hero-lead">
-        Find and join events, connect with organizers, or create your own event
-      </p>
+        <p class="hero-lead">
+          Find and join events, connect with organizers, or create your own event
+        </p>
 
-      <div class="search-wrap">
-        <div class="search-bar">
-          <input id="searchInput" type="text" placeholder="Search events" class="search-input">
-          <input id="locationInput" type="text" placeholder="Location" class="search-input">
+        <div class="search-wrap">
+          <div class="search-bar">
+            <div class="search-field-wrap">
+              <input
+                id="searchInput"
+                type="search"
+                autocomplete="off"
+                placeholder="Ieškoti renginių"
+                class="search-input"
+                aria-autocomplete="list"
+                aria-controls="searchSuggestions"
+                aria-expanded="false"
+              >
+              <ul
+                id="searchSuggestions"
+                class="search-dropdown"
+                role="listbox"
+                hidden
+              ></ul>
+            </div>
+            <div class="search-field-wrap">
+              <input
+                id="locationInput"
+                type="search"
+                autocomplete="off"
+                placeholder="Miestas"
+                class="search-input"
+                aria-autocomplete="list"
+                aria-controls="locationSuggestions"
+                aria-expanded="false"
+              >
+              <ul
+                id="locationSuggestions"
+                class="search-dropdown"
+                role="listbox"
+                hidden
+              ></ul>
+            </div>
 
-          <button type="button" onclick="searchEvents()" class="search-btn">
-            Search
-          </button>
+            <button type="button" onclick="searchEvents()" class="search-btn">
+              Ieškoti
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -79,14 +125,23 @@ $e = static fn($value) => htmlspecialchars(
       <h2 class="section-title">Events tavo mieste</h2>
       <p class="section-subtitle">Discover the most interesting happenings near you</p>
     </div>
-
-    <a href="<?= $e($base) ?>/events" class="section-action">View all</a>
+    <button
+      id="homeEventsToggle"
+      type="button"
+      class="section-action"
+      aria-expanded="false"
+    >
+      View all
+    </button>
   </div>
 
   <?php
   $gridId = "eventsGrid";
   $gridClass = "events-grid";
-  $emptyText = "Events nerasti";
+  $gridExtraClass = "mt-6";
+  $gridInitialVisible = 3;
+  $gridStartExpanded = true;
+  $emptyText = "Pagal pasirinktus kriterijus renginių nėra.";
   $basePath = ($base ?? "") . "/events";
   $events = $events ?? [];
 
@@ -99,3 +154,4 @@ $e = static fn($value) => htmlspecialchars(
   require $partial;
   ?>
 </section>
+

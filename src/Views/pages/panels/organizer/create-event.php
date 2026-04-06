@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $base = $base ?? "";
 $flashSuccess = $flashSuccess ?? null;
 $flashError = $flashError ?? null;

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -13,9 +13,14 @@ final class PanelController
 {
     public function user(): void
     {
+        $base = rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
+        if ($base === "" || $base === "." || $base === "/") {
+            $base = "";
+        }
+
         $title = "User Panel";
         $view = __DIR__ . "/../Views/pages/panels/user/index.php";
-        $pageScripts = ["/cityevents/public/assets/js/user-panel.js"];
+        $pageScripts = [$base . "/assets/js/user-panel.js"];
 
         $authUser = Auth::user() ?? [];
         $userId = (int) ($authUser["id"] ?? 0);
@@ -55,9 +60,14 @@ final class PanelController
 
     public function admin(): void
     {
+        $base = rtrim(str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")), "/");
+        if ($base === "" || $base === "." || $base === "/") {
+            $base = "";
+        }
+
         $title = "Admin panelis";
         $view = __DIR__ . "/../Views/pages/panels/admin/index.php";
-        $pageScripts = ["/cityevents/public/assets/js/admin.js"];
+        $pageScripts = [$base . "/assets/js/admin.js"];
         $tab = (string) ($_GET["tab"] ?? "pending");
         $authUser = Auth::user() ?? [];
 

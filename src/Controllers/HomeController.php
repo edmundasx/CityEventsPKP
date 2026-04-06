@@ -5,6 +5,7 @@ namespace App\Controllers;
 
 use App\Core\Db;
 use App\Repositories\EventRepository;
+use App\Support\LithuaniaPlaces;
 
 final class HomeController
 {
@@ -21,8 +22,8 @@ final class HomeController
         $enableLoginModal = true;
 
         $repo = new EventRepository(Db::pdo());
-        $events = $repo->homepageEvents(12, true); // only future approved events
-        $mapEvents = $repo->mapEvents(true);
+        $events = $repo->homepageEvents(null, true, 1); // all approved events from now -1h
+        $mapEvents = $repo->mapEvents(true, 1);
 
         $mapById = [];
         foreach ($mapEvents as $event) {
@@ -47,15 +48,49 @@ final class HomeController
                 "date" => (string) ($event["date"] ?? ""),
                 "time" => (string) ($event["time"] ?? ""),
                 "category" => (string) ($event["category"] ?? ""),
+                "district" => (string) ($event["district"] ?? ""),
+                "organizer_name" => (string) ($event["organizer_name"] ?? ""),
+                "tags" => (string) ($event["tags"] ?? ""),
                 "lat" => isset($event["lat"]) ? (float) $event["lat"] : null,
                 "lng" => isset($event["lng"]) ? (float) $event["lng"] : null,
-                "url" =>
-                    $base .
-                    "/events/" .
-                    rawurlencode((string) ($event["id"] ?? 0)),
             ],
             $events,
         );
+
+        $searchIndexJson = json_encode(
+            array_map(
+                static fn(array $e): array => [
+                    "id" => (int) ($e["id"] ?? 0),
+                    "title" => (string) ($e["title"] ?? ""),
+                    "organizer_name" => (string) ($e["organizer_name"] ?? ""),
+                    "location" => (string) ($e["location"] ?? ""),
+                    "category" => (string) ($e["category"] ?? ""),
+                    "district" => (string) ($e["district"] ?? ""),
+                    "tags" => (string) ($e["tags"] ?? ""),
+                ],
+                $homeMapEvents,
+            ),
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        );
+        if ($searchIndexJson === false) {
+            $searchIndexJson = "[]";
+        }
+
+        $ltPlacesJson = json_encode(
+            LithuaniaPlaces::all(),
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        );
+        if ($ltPlacesJson === false) {
+            $ltPlacesJson = "[]";
+        }
+
+        $ltMapTargetsJson = json_encode(
+            LithuaniaPlaces::mapTargets(),
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        );
+        if ($ltMapTargetsJson === false) {
+            $ltMapTargetsJson = "[]";
+        }
 
         $pageStyles = [
             "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",

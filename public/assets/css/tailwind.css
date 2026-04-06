@@ -303,18 +303,23 @@
     min-height: 34rem;
   }
   .hero-inner {
-    position: relative;
+    position: absolute;
+    inset: calc(var(--spacing) * 0);
     z-index: 10;
     display: flex;
-    min-height: 34rem;
     align-items: center;
     justify-content: center;
     padding-block: calc(var(--spacing) * 14);
+    pointer-events: none;
+  }
+  .hero-inner > .container-ce {
+    pointer-events: none;
   }
   .hero-content {
     margin-inline: auto;
     max-width: var(--container-2xl);
     text-align: left;
+    pointer-events: none;
   }
   .hero-title {
     font-size: var(--text-3xl);
@@ -345,6 +350,7 @@
     z-index: 0;
     height: 100%;
     width: 100%;
+    pointer-events: auto;
   }
   .home-hero-map-bg .leaflet-control-container {
     opacity: 90%;
@@ -361,6 +367,7 @@
     margin-inline: auto;
     margin-top: calc(var(--spacing) * 8);
     max-width: var(--container-3xl);
+    pointer-events: none;
   }
   .search-bar {
     display: flex;
@@ -378,6 +385,13 @@
     @media (width >= 48rem) {
       flex-direction: row;
     }
+    pointer-events: auto;
+  }
+  .search-field-wrap {
+    position: relative;
+    z-index: 75;
+    min-width: 0;
+    flex: 1;
   }
   .search-input {
     width: 100%;
@@ -407,6 +421,18 @@
       }
     }
   }
+  #searchInput.search-input::-webkit-search-cancel-button,
+  #locationInput.search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    width: 3rem;
+    height: 3rem;
+    margin-inline-end: 0;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2364748b' d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 1rem 1rem;
+  }
   .search-btn {
     width: 100%;
     border-radius: var(--radius-xl);
@@ -430,6 +456,48 @@
     @media (width >= 48rem) {
       width: auto;
     }
+  }
+  .search-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    z-index: 90;
+    margin-top: calc(var(--spacing) * -2);
+    display: flex;
+    max-height: calc(var(--spacing) * 60);
+    flex-direction: column;
+    overflow-y: auto;
+    border-bottom-right-radius: var(--radius-xl);
+    border-bottom-left-radius: var(--radius-xl);
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+    border-top-width: 0;
+    border-color: var(--color-slate-200);
+    background-color: var(--color-white);
+    padding-block: calc(var(--spacing) * 2);
+    text-align: left;
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
+    color: var(--color-slate-800);
+    --tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    opacity: 1;
+  }
+  .search-dropdown li {
+    cursor: pointer;
+    padding-inline: calc(var(--spacing) * 3);
+    padding-block: calc(var(--spacing) * 2);
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-slate-100);
+      }
+    }
+  }
+  .search-suggest-title {
+    display: block;
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
   }
   .cats-grid,
   .categories-content {
@@ -766,11 +834,14 @@
     color: var(--color-slate-500);
   }
   .events-empty {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: calc(var(--spacing) * 40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--radius-2xl);
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-    border-color: var(--color-slate-200);
-    background-color: var(--color-white);
+    background-color: transparent;
     padding: calc(var(--spacing) * 6);
     text-align: center;
     font-size: var(--text-sm);
@@ -2564,3 +2635,9 @@
 .auth-modal-input:focus { border-color: var(--color-brand); }
 .auth-modal-submit { margin-top: calc(var(--spacing) * 2); width: 100%; }
 .auth-modal-error { margin-top: calc(var(--spacing) * 3); border-radius: var(--radius-lg); border-style: var(--tw-border-style); border-width: 1px; border-color: color-mix(in oklab, var(--color-red-300) 30%, transparent); background-color: color-mix(in oklab, var(--color-red-300) 10%, transparent); padding-inline: calc(var(--spacing) * 3); padding-block: calc(var(--spacing) * 2); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); color: var(--color-red-300); }
+
+
+/* TEST OVERRIDE: only map + selected search controls accept pointer input */
+.hero, .hero * { pointer-events: none !important; }
+#homeHeroMap, #homeHeroMap * { pointer-events: auto !important; }
+#searchInput, #locationInput, .search-btn, .search-bar, .search-field-wrap, .search-dropdown, .search-dropdown * { pointer-events: auto !important; }

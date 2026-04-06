@@ -13,22 +13,53 @@ final class EventRepository
     public function __construct(private PDO $pdo) {}
 
     public function homepageEvents(
-        int $limit = 12,
+        ?int $limit = 12,
         bool $onlyFuture = true,
+        int $lookbackHours = 0,
     ): array {
-        $futureClause = $onlyFuture ? "AND e.event_date >= NOW()" : "";
+        $futureClause = $onlyFuture
+            ? "AND e.event_date >= DATE_SUB(NOW(), INTERVAL :lookback_hours HOUR)"
+            : "";
+        $limitClause = $limit !== null ? "LIMIT :limit" : "";
+        $columns = $this->eventColumns();
 
         $sql = "
-            SELECT e.id, e.title, e.location, e.event_date, e.price, e.cover_image
+            SELECT
+                e.id,
+                e.title,
+                e.location,
+                e.event_date,
+                e.price,
+                e.cover_image,
+                u.name AS organizer_name,
+                " .
+            $this->selectColumn($columns, "category") .
+            ",
+                " .
+            $this->selectColumn($columns, "district") .
+            ",
+                " .
+            $this->selectColumn($columns, "tags") .
+            "
             FROM events e
+            LEFT JOIN users u ON u.id = e.organizer_id
             WHERE e.status = 'approved'
             {$futureClause}
             ORDER BY e.event_date ASC
-            LIMIT :limit
+            {$limitClause}
         ";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+        if ($onlyFuture) {
+            $stmt->bindValue(
+                ":lookback_hours",
+                max(0, $lookbackHours),
+                PDO::PARAM_INT,
+            );
+        }
+        if ($limit !== null) {
+            $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+        }
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -50,13 +81,22 @@ final class EventRepository
                 "location" => (string) $r["location"],
                 "price" => $priceLabel,
                 "image" => (string) ($r["cover_image"] ?? ""),
+                "organizer_name" => (string) ($r["organizer_name"] ?? ""),
+                "category" => (string) ($r["category"] ?? ""),
+                "district" => (string) ($r["district"] ?? ""),
+                "tags" => (string) ($r["tags"] ?? ""),
             ];
         }, $rows);
     }
 
-    public function mapEvents(bool $onlyFuture = true): array
+    public function mapEvents(
+        bool $onlyFuture = true,
+        int $lookbackHours = 0,
+    ): array
     {
-        $futureClause = $onlyFuture ? "AND e.event_date >= NOW()" : "";
+        $futureClause = $onlyFuture
+            ? "AND e.event_date >= DATE_SUB(NOW(), INTERVAL :lookback_hours HOUR)"
+            : "";
         $columns = $this->eventColumns();
 
         $sql =
@@ -67,11 +107,15 @@ final class EventRepository
                 e.location,
                 e.event_date,
                 e.price,
+                u.name AS organizer_name,
                 " .
             $this->selectColumn($columns, "category") .
             ",
                 " .
             $this->selectColumn($columns, "district") .
+            ",
+                " .
+            $this->selectColumn($columns, "tags") .
             ",
                 " .
             $this->selectColumn($columns, "lat") .
@@ -81,12 +125,20 @@ final class EventRepository
             ",
                 e.cover_image
             FROM events e
+            LEFT JOIN users u ON u.id = e.organizer_id
             WHERE e.status = 'approved'
             {$futureClause}
             ORDER BY e.event_date ASC
         ";
 
         $stmt = $this->pdo->prepare($sql);
+        if ($onlyFuture) {
+            $stmt->bindValue(
+                ":lookback_hours",
+                max(0, $lookbackHours),
+                PDO::PARAM_INT,
+            );
+        }
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -108,6 +160,8 @@ final class EventRepository
                 "is_free" => $price <= 0.0,
                 "category" => (string) ($r["category"] ?? ""),
                 "district" => (string) ($r["district"] ?? ""),
+                "organizer_name" => (string) ($r["organizer_name"] ?? ""),
+                "tags" => (string) ($r["tags"] ?? ""),
                 "lat" => $lat === null ? null : (float) $lat,
                 "lng" => $lng === null ? null : (float) $lng,
                 "cover_image" => (string) ($r["cover_image"] ?? ""),

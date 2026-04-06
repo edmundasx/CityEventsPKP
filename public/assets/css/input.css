@@ -34,11 +34,16 @@
     .hero {
         @apply relative overflow-hidden bg-brand text-white min-h-[34rem];
     }
+    /* Full-width overlay so the hit target is not a narrow column (same width as content grid). */
     .hero-inner {
-        @apply relative z-10 flex min-h-[34rem] items-center justify-center py-14;
+        @apply absolute inset-0 z-10 flex items-center justify-center py-14 pointer-events-none;
+    }
+    /* Children default to pointer-events: auto — without this, the full-width inner wrapper blocks the map. */
+    .hero-inner > .container-ce {
+        pointer-events: none;
     }
     .hero-content {
-        @apply mx-auto max-w-2xl text-center;
+        @apply mx-auto max-w-2xl text-center pointer-events-none;
     }
     .hero-title {
         @apply text-3xl font-extrabold leading-tight md:text-5xl;
@@ -49,6 +54,7 @@
 
     .home-hero-map-bg {
         @apply absolute inset-0 z-0 h-full w-full;
+        pointer-events: auto;
     }
     .home-hero-map-bg .leaflet-control-container {
         @apply opacity-90;
@@ -59,19 +65,49 @@
         @apply absolute inset-0 z-[1] opacity-35 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.12),rgba(0,0,0,0.58)_68%)];
     }
 
-    /* search */
+    /* search: outer wrap passes clicks to map; bar + fields use pointer-events auto */
     .search-wrap {
-        @apply mx-auto mt-8 max-w-3xl;
+        @apply mx-auto mt-8 max-w-3xl pointer-events-none;
     }
     .search-bar {
-        @apply flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+        @apply pointer-events-auto flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+    }
+    .search-field-wrap {
+        @apply relative z-[75] min-w-0 flex-1;
     }
     .search-input {
         @apply w-full rounded-xl bg-white/90 px-4 py-3 text-slate-900 placeholder:text-slate-500
                outline-none ring-0 focus:ring-4 focus:ring-white/30;
     }
+    /* Native clear (×): large tap target; icon stays ~1rem via background-size */
+    #searchInput.search-input::-webkit-search-cancel-button,
+    #locationInput.search-input::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+        width: 3rem;
+        height: 3rem;
+        margin-inline-end: 0;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2364748b' d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 1rem 1rem;
+    }
     .search-btn {
         @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition;
+    }
+    .search-dropdown {
+        @apply absolute left-0 right-0 top-full z-[90] -mt-2 flex max-h-60 flex-col overflow-y-auto rounded-b-xl border border-slate-200 border-t-0
+               bg-white py-2 text-left text-sm text-slate-800 shadow-2xl;
+        opacity: 1;
+    }
+    .search-dropdown li {
+        @apply cursor-pointer px-3 py-2 hover:bg-slate-100;
+    }
+    .search-suggest-title {
+        @apply block font-medium;
+    }
+    .search-suggest-sub {
+        @apply mt-0.5 block text-xs text-slate-500;
     }
     /* categories */
     .cats-grid,
@@ -203,7 +239,7 @@
         @apply text-slate-500;
     }
     .events-empty {
-        @apply rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500;
+        @apply col-span-full w-full min-h-40 flex items-center justify-center rounded-2xl bg-transparent p-6 text-center text-sm text-slate-500;
     }
     .event-image--placeholder {
         @apply h-full w-full bg-slate-200;
@@ -215,96 +251,6 @@
 
     .footer-container {
         @apply max-w-[1200px] mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-2;
-    }
-
-    /* event details page */
-    .event-page {
-        @apply bg-[#090a0d] text-slate-200 py-8 pb-16;
-    }
-    .event-page-inner {
-        @apply mx-auto max-w-6xl px-4;
-    }
-    .event-breadcrumbs {
-        @apply text-xs text-slate-400;
-    }
-    .event-breadcrumbs-list {
-        @apply flex flex-wrap items-center gap-2;
-    }
-    .event-breadcrumb-link {
-        @apply transition hover:text-orange-400;
-    }
-    .event-breadcrumb-separator {
-        @apply text-slate-600;
-    }
-    .event-breadcrumb-current {
-        @apply text-slate-300;
-    }
-    .event-hero-shell {
-        @apply mt-4 overflow-hidden rounded-xl border border-white/10;
-    }
-    .event-hero-image,
-    .event-hero-placeholder {
-        @apply h-[420px] w-full bg-slate-800 object-cover;
-    }
-    .event-content-grid {
-        @apply mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px];
-    }
-    .event-main-column {
-        @apply flex flex-col gap-6;
-    }
-    .event-category-tag {
-        @apply inline-flex rounded-full bg-orange-500/15 px-3 py-1 text-xs lowercase text-orange-300;
-    }
-    .event-page-title {
-        @apply mt-4 text-4xl font-bold leading-tight text-white;
-    }
-    .event-card-block {
-        @apply rounded-xl border border-white/15 bg-[#0d1016] p-6;
-    }
-    .event-card-title {
-        @apply text-3xl font-semibold text-white;
-    }
-    .event-description {
-        @apply mt-4 leading-8 text-slate-300;
-    }
-    .event-info-list {
-        @apply mt-4 grid gap-3 text-slate-200;
-    }
-    .event-info-label {
-        @apply mr-1 font-semibold text-white;
-    }
-    .event-bullet-list {
-        @apply mt-4 grid list-disc gap-2 pl-5 text-slate-300;
-    }
-    .event-organizer-card {
-        @apply mt-4 flex items-center gap-3 rounded-lg bg-white/10 p-4;
-    }
-    .event-organizer-avatar {
-        @apply flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 font-bold text-white;
-    }
-    .event-organizer-name {
-        @apply font-semibold text-white;
-    }
-    .event-organizer-status {
-        @apply text-xs text-slate-400;
-    }
-    .event-sidebar {
-        @apply lg:pt-20;
-    }
-    .event-sidebar-card {
-        @apply rounded-xl border border-white/15 bg-[#0d1016] p-6;
-    }
-    .event-sidebar-price {
-        @apply text-4xl font-bold text-orange-500;
-    }
-    .event-ticket-button {
-        @apply mt-4 inline-flex w-full items-center justify-center rounded-lg bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-400;
-    }
-    .event-favorite-button {
-        @apply mt-2 w-full rounded-lg border border-white/20 bg-transparent px-4 py-3 font-semibold text-white transition hover:border-orange-500;
-    }
-    .event-ticket-meta {
-        @apply mt-3 text-center text-xs text-slate-400;
     }
 
     /* map page */
@@ -1195,3 +1141,15 @@
     @apply mt-3 rounded-lg border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm text-red-300;
   }
 }
+
+
+/* TEST OVERRIDE: only map + selected search controls accept pointer input */
+.hero, .hero * { pointer-events: none !important; }
+#homeHeroMap, #homeHeroMap * { pointer-events: auto !important; }
+#searchInput,
+#locationInput,
+.search-btn,
+.search-bar,
+.search-field-wrap,
+.search-dropdown,
+.search-dropdown * { pointer-events: auto !important; }

@@ -31,19 +31,19 @@ $enableLoginModal = $enableLoginModal ?? false;
         <?php if ($authUser): ?>
           <span class="header-user-name"><?= htmlspecialchars((string) ($authUser["name"] ?? ""), ENT_QUOTES, "UTF-8") ?></span>
           <form method="post" action="<?= $base ?>/logout" class="header-logout-form">
-            <button type="submit" class="btn-outline">Log out</button>
+            <button type="submit" class="btn btn-outline">Log out</button>
           </form>
         <?php else: ?>
           <?php if ($enableLoginModal): ?>
-            <button type="button" class="btn-outline js-open-login-modal">Log in</button>
-            <button type="button" class="btn-primary js-open-register-modal">Sign up</button>
+            <button type="button" class="btn btn-outline js-open-login-modal">Log in</button>
+            <button type="button" class="btn btn-primary js-open-register-modal">Sign up</button>
             <noscript>
-              <a class="btn-outline" href="<?= $base ?>/login">Log in</a>
-              <a class="btn-primary" href="<?= $base ?>/signup">Sign up</a>
+              <a class="btn btn-outline" href="<?= $base ?>/login">Log in</a>
+              <a class="btn btn-primary" href="<?= $base ?>/signup">Sign up</a>
             </noscript>
           <?php else: ?>
-            <a class="btn-outline" href="<?= $base ?>/login">Log in</a>
-            <a class="btn-primary" href="<?= $base ?>/signup">Sign up</a>
+            <a class="btn btn-outline" href="<?= $base ?>/login">Log in</a>
+            <a class="btn btn-primary" href="<?= $base ?>/signup">Sign up</a>
           <?php endif; ?>
         <?php endif; ?>
       </div>

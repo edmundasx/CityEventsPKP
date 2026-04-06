@@ -9,6 +9,8 @@ return function (Router $router): void {
     $router->get("/", "HomeController@index");
     $router->get("/home", "HomeController@index");
 
+    $router->get("/api/reverse-geocode", "GeocodeController@reverse");
+
     // Map
     $router->get("/map", "MapController@index");
     $router->get("/organizers", "OrganizerController@index");
@@ -59,7 +61,5 @@ return function (Router $router): void {
         new RoleMiddleware(["admin"]),
     ]);
 
-    // Events (optional, keep if you have these controllers)
-    $router->get("/events", "EventController@index");
     $router->get("/events/{id:\d+}", "EventController@show");
 };

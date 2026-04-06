@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -18,9 +18,9 @@ final class MapController
         // Provide ALL data your partials might rely on (so they can't silently output nothing)
 
         $repo = new EventRepository(Db::pdo());
-        $events = $repo->mapEvents(true);
+        $events = $repo->mapEvents(true, 1);
         $breadcrumbs = [
-            ["label" => "Events", "href" => $base . "/events"],
+            ["label" => "Events", "href" => $base . "/home#events"],
             ["label" => "Map", "href" => $base . "/map"],
         ];
 
