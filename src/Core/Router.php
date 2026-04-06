@@ -129,12 +129,18 @@ final class Router
     {
         $path = parse_url($uri, PHP_URL_PATH) ?? "/";
 
-        // strip basePath (e.g. /cityevents/public)
-        if ($this->basePath !== "" && str_starts_with($path, $this->basePath)) {
+        // Strip basePath (e.g. /cityevents/public).
+        // Use case-insensitive match to avoid 404s when URL casing differs.
+        if (
+            $this->basePath !== "" &&
+            stripos($path, $this->basePath) === 0
+        ) {
             $path = substr($path, strlen($this->basePath));
-            if ($path === "") {
-                $path = "/";
-            }
+        }
+
+        // Also strip index.php if it's explicitly in the URL
+        if (str_starts_with($path, "/index.php")) {
+            $path = substr($path, 10);
         }
 
         // normalize
