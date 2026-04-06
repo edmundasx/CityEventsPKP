@@ -42,7 +42,7 @@ final class AdminRepository
                     e.status,
                     e.updated_at,
                     u.name AS organizer_name
-                FROM events
+                FROM events e
                 LEFT JOIN users u ON u.id = e.organizer_id
                 WHERE {$whereSql}
                 ORDER BY e.updated_at DESC
