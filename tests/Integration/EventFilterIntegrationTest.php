@@ -18,7 +18,7 @@ final class EventFilterIntegrationTest extends TestCase
     {
         $this->pdo = new PDO('sqlite::memory:');
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        Db::setPdo($this->pdo); // You may need to implement this static setter in your Db class for testability
+        Db::setPdo($this->pdo);
 
         $this->pdo->exec("
             CREATE TABLE events (
@@ -62,4 +62,38 @@ final class EventFilterIntegrationTest extends TestCase
         $this->assertStringNotContainsString('Art Exhibition', $output);
         $this->assertStringNotContainsString('Tech Meetup', $output);
     }
+
+    public function testFilterReturnsEmptyWhenNoMatch(): void
+    {
+        $_GET = [
+            'category' => 'Sports'
+        ];
+
+        $_SERVER['SCRIPT_NAME'] = '/public/index.php';
+
+        ob_start();
+        $controller = new EventController();
+        $controller->filter();
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('Rock Concert', $output);
+        $this->assertStringNotContainsString('Jazz Night', $output);
+    }
+
+    public function testFilterHandlesInvalidPrice(): void
+    {
+        $_GET = [
+            'price_max' => 'invalid'
+        ];
+
+        $_SERVER['SCRIPT_NAME'] = '/public/index.php';
+
+        ob_start();
+        $controller = new EventController();
+        $controller->filter();
+        $output = ob_get_clean();
+
+        $this->assertNotEmpty($output); // sistema nelūžta
+    }
+
 }
