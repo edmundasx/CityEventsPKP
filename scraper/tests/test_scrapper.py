@@ -3,9 +3,12 @@ from __future__ import annotations
 import csv
 import json
 import sqlite3
+import sys
 from pathlib import Path
 
 import pytest
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from event_scrapper import VilniusEventsFullScraper
 
