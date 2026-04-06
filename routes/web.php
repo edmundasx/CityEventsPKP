@@ -9,6 +9,8 @@ return function (Router $router): void {
     $router->get("/", "HomeController@index");
     $router->get("/home", "HomeController@index");
 
+    $router->get("/api/reverse-geocode", "GeocodeController@reverse");
+
     // Map
     $router->get("/map", "MapController@index");
     $router->get("/organizers", "OrganizerController@index");

@@ -13,6 +13,8 @@
     map: null,
     markersLayer: null,
     markersById: new Map(),
+    lithuaniaBounds: null,
+    ltMapTargets: [],
   };
   const categoryAliases = {
     music: ["music", "muzika"],
@@ -40,9 +42,14 @@
       heroEl?.dataset?.searchIndex || "[]",
     );
     const ltPlaces = parseLtPlaces(heroEl?.dataset?.ltPlaces || "[]");
+    const ltMapTargets = parseLtMapTargets(
+      heroEl?.dataset?.ltMapTargets || "[]",
+    );
 
     decorateCards(cards, eventsById);
-    initLeafletMap(mapEl, events);
+    initLeafletMap(mapEl, events, ltMapTargets);
+    const appBase = (heroEl?.dataset?.appBase ?? "").replace(/\/$/, "");
+
     bindInputs(
       cards,
       eventsById,
@@ -50,6 +57,7 @@
       toggleBtn,
       searchIndex,
       ltPlaces,
+      appBase,
     );
     applyFilters(cards, eventsById, initialVisible, toggleBtn);
   }
@@ -81,6 +89,141 @@
     }
   }
 
+  function parseLtMapTargets(raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .map((row) => ({
+          name: String(row?.name ?? ""),
+          lat: Number(row?.lat),
+          lng: Number(row?.lng),
+          zoom: Number(row?.zoom),
+        }))
+        .filter(
+          (row) =>
+            row.name &&
+            Number.isFinite(row.lat) &&
+            Number.isFinite(row.lng) &&
+            Number.isFinite(row.zoom),
+        );
+    } catch (_error) {
+      return [];
+    }
+  }
+
+  function matchCityToKnownPlace(rawCity, places) {
+    const trimmed = String(rawCity || "").trim();
+    if (!trimmed) {
+      return "";
+    }
+    const rawN = normalize(trimmed);
+    for (const p of places) {
+      if (normalize(p) === rawN) {
+        return p;
+      }
+    }
+    let best = "";
+    let bestLen = 0;
+    for (const p of places) {
+      const n = normalize(p);
+      if (!n) {
+        continue;
+      }
+      if (rawN.includes(n) || n.includes(rawN)) {
+        if (n.length > bestLen) {
+          best = p;
+          bestLen = n.length;
+        }
+      }
+    }
+    return best || trimmed;
+  }
+
+  async function fetchReverseCity(lat, lon, appBase) {
+    const root = (appBase || "").replace(/\/$/, "");
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lon: String(lon),
+    });
+    const url = `${root}/api/reverse-geocode?${params.toString()}`;
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json();
+    const city = data?.city;
+    return typeof city === "string" && city.trim() !== "" ? city.trim() : null;
+  }
+
+  function requestUserCityAutofill(locationInput, ltPlaces, commitFromInputs, appBase) {
+    if (!locationInput || !navigator.geolocation) {
+      return;
+    }
+    if (locationInput.value.trim() !== "") {
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        void (async () => {
+          if (locationInput.value.trim() !== "") {
+            return;
+          }
+          try {
+            const rawCity = await fetchReverseCity(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              appBase,
+            );
+            if (!rawCity || locationInput.value.trim() !== "") {
+              return;
+            }
+            locationInput.value = matchCityToKnownPlace(rawCity, ltPlaces);
+            commitFromInputs();
+          } catch (_error) {
+            /* ignore */
+          }
+        })();
+      },
+      () => {},
+      {
+        enableHighAccuracy: false,
+        timeout: 12000,
+        maximumAge: 600000,
+      },
+    );
+  }
+
+  function findPlaceView(location, targets) {
+    const q = normalize(location);
+    if (!q || !targets.length) {
+      return null;
+    }
+    let best = null;
+    let bestLen = 0;
+    for (const p of targets) {
+      const n = normalize(p.name);
+      if (!n) {
+        continue;
+      }
+      if (q === n) {
+        return p;
+      }
+      if (q.includes(n) || n.includes(q)) {
+        if (n.length > bestLen) {
+          best = p;
+          bestLen = n.length;
+        }
+      }
+    }
+    return best;
+  }
+
   function getCards(gridEl) {
     return Array.from(gridEl.querySelectorAll(".event-card"));
   }
@@ -109,6 +252,7 @@
     toggleBtn,
     searchIndex,
     ltPlaces,
+    appBase,
   ) {
     const searchInput = document.getElementById("searchInput");
     const locationInput = document.getElementById("locationInput");
@@ -377,6 +521,15 @@
         applyFilters(cards, eventsById, initialVisible, toggleBtn);
       });
     }
+
+    setTimeout(() => {
+      requestUserCityAutofill(
+        locationInput,
+        ltPlaces,
+        commitFromInputs,
+        appBase,
+      );
+    }, 400);
   }
 
   function syncCategoryButtonState(buttons) {
@@ -478,12 +631,17 @@
     return /^\d+$/.test(maybeId) ? maybeId : "";
   }
 
-  function initLeafletMap(mapEl, events) {
+  function initLeafletMap(mapEl, events, ltMapTargets) {
     if (typeof L === "undefined") return;
+
+    const lithuaniaBounds = L.latLngBounds(
+      [53.85, 20.65],
+      [56.55, 26.95],
+    );
 
     const map = L.map(mapEl, {
       scrollWheelZoom: false,
-    }).setView([54.6872, 25.2797], 11);
+    });
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -510,6 +668,10 @@
 
     mapState.map = map;
     mapState.markersLayer = markersLayer;
+    mapState.lithuaniaBounds = lithuaniaBounds;
+    mapState.ltMapTargets = ltMapTargets;
+
+    map.fitBounds(lithuaniaBounds, { padding: [16, 16], maxZoom: 8 });
 
     setTimeout(() => {
       map.invalidateSize();
@@ -536,19 +698,32 @@
 
     mapState.markersLayer.clearLayers();
 
-    const visibleMarkers = [];
     mapState.markersById.forEach((marker, id) => {
       if (!visibleIds.has(id)) return;
       marker.addTo(mapState.markersLayer);
-      visibleMarkers.push(marker);
     });
 
-    if (!visibleMarkers.length) return;
+    const loc = (state.location || "").trim();
+    const bounds = mapState.lithuaniaBounds;
 
-    const group = L.featureGroup(visibleMarkers);
-    const bounds = group.getBounds();
-    if (bounds.isValid()) {
-      mapState.map.fitBounds(bounds.pad(0.2), { maxZoom: 13 });
+    if (!normalize(loc)) {
+      if (bounds && bounds.isValid()) {
+        mapState.map.fitBounds(bounds, { padding: [16, 16], maxZoom: 8 });
+      }
+      return;
+    }
+
+    const place = findPlaceView(loc, mapState.ltMapTargets);
+    if (place) {
+      mapState.map.flyTo([place.lat, place.lng], place.zoom, {
+        duration: 0.45,
+        animate: true,
+      });
+      return;
+    }
+
+    if (bounds && bounds.isValid()) {
+      mapState.map.fitBounds(bounds, { padding: [16, 16], maxZoom: 8 });
     }
   }
 

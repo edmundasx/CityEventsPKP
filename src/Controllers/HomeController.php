@@ -84,6 +84,14 @@ final class HomeController
             $ltPlacesJson = "[]";
         }
 
+        $ltMapTargetsJson = json_encode(
+            LithuaniaPlaces::mapTargets(),
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        );
+        if ($ltMapTargetsJson === false) {
+            $ltMapTargetsJson = "[]";
+        }
+
         $pageStyles = [
             "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
         ];

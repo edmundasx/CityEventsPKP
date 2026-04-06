@@ -12,6 +12,7 @@ if ($homeMapJson === false) {
 
 $searchIndexJson = $searchIndexJson ?? "[]";
 $ltPlacesJson = $ltPlacesJson ?? "[]";
+$ltMapTargetsJson = $ltMapTargetsJson ?? "[]";
 
 $e = static fn($value) => htmlspecialchars(
     (string) $value,
@@ -22,8 +23,10 @@ $e = static fn($value) => htmlspecialchars(
 
 <section
   class="hero"
+  data-app-base="<?= $e($base ?? '') ?>"
   data-search-index="<?= $e($searchIndexJson) ?>"
   data-lt-places="<?= $e($ltPlacesJson) ?>"
+  data-lt-map-targets="<?= $e($ltMapTargetsJson) ?>"
 >
   <div
     id="homeHeroMap"
@@ -64,7 +67,7 @@ $e = static fn($value) => htmlspecialchars(
             <div class="search-field-wrap">
               <input
                 id="locationInput"
-                type="text"
+                type="search"
                 autocomplete="off"
                 placeholder="Miestas"
                 class="search-input"
