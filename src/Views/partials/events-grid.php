@@ -15,6 +15,15 @@ if ($base === "." || $base === "/") {
 $basePath = $basePath ?? ($base . "/events");
 
 $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
+
+$eventCategoryLabels = [
+    "music" => "Music",
+    "arts" => "Art",
+    "charity" => "Charity",
+    "business" => "Business",
+    "education" => "Education",
+    "food" => "Food & Drinks",
+];
 ?>
 
 <div
@@ -37,12 +46,21 @@ $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
       $loc = $event["location"] ?? "";
       $price = $event["price"] ?? "";
       $img = $event["image"] ?? "";
+      $categoryRaw = trim((string) ($event["category"] ?? ""));
+      $categoryLabel = "";
+      if ($categoryRaw !== "") {
+          $categoryKey = strtolower($categoryRaw);
+          $categoryLabel = $eventCategoryLabels[$categoryKey] ?? ucfirst($categoryRaw);
+      }
       ?>
 
       <a
         class="event-card h-full"
         href="<?= $e($href) ?>"
         data-event-index="<?= $e((string) $index) ?>"
+        <?php if ($categoryRaw !== ""): ?>
+        data-category="<?= $e($categoryRaw) ?>"
+        <?php endif; ?>
       >
         <div class="event-media">
           <?php if ($img !== ""): ?>
@@ -58,6 +76,10 @@ $e = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8");
 
         <div class="event-content h-full flex flex-col">
           <div class="event-title"><?= $e($title) ?></div>
+
+          <?php if ($categoryLabel !== ""): ?>
+            <div class="event-category"><?= $e($categoryLabel) ?></div>
+          <?php endif; ?>
 
           <div class="event-meta">
             <div class="event-datetime"><?= $e($date) ?> <?= $e($time) ?></div>

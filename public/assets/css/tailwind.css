@@ -797,6 +797,25 @@
     font-weight: var(--font-weight-semibold);
     color: var(--color-slate-900);
   }
+  .event-category {
+    margin-top: calc(var(--spacing) * 1);
+    display: inline-block;
+    max-width: 100%;
+    border-radius: calc(infinity * 1px);
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+    border-color: var(--color-slate-200);
+    background-color: var(--color-slate-50);
+    padding-inline: calc(var(--spacing) * 2);
+    padding-block: calc(var(--spacing) * 0.5);
+    font-size: 11px;
+    line-height: var(--tw-leading, var(--text-xs--line-height));
+    --tw-font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-slate-600);
+  }
   .event-price {
     position: absolute;
     right: calc(var(--spacing) * 3);

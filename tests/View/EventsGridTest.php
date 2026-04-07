@@ -18,6 +18,7 @@ final class EventsGridTest extends TestCase
                 "location" => "Test Location",
                 "price" => "Nemokamai",
                 "image" => "/images/test.jpg",
+                "category" => "music",
             ],
         ];
 
@@ -42,6 +43,17 @@ final class EventsGridTest extends TestCase
             "Test Event",
             $html,
             "Renginio pavadinimas turi būti atvaizduotas kortelėje"
+        );
+
+        $this->assertStringContainsString(
+            "Music",
+            $html,
+            "Renginio kategorija turi būti atvaizduota kortelėje"
+        );
+        $this->assertStringContainsString(
+            'data-category="music"',
+            $html,
+            "Kortelė turi turėti data-category atributą"
         );
     }
 }

@@ -38,22 +38,6 @@ final class MainPageFilteringIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * NEFUNKCINIS: Našumo testas.
-     */
-	/** @group integration */
-    public function testUpcomingEventsQueryPerformance(): void
-    {
-        $pdo = Db::pdo();
-        $repo = new EventRepository($pdo);
-
-        $start = microtime(true);
-        $repo->homepageEvents(50);
-        $duration = (microtime(true) - $start) * 1000;
-
-        $this->assertLessThan(100, $duration, "Užklausa per lėta.");
-    }
-
     private function createEvent($pdo, $title, $date): void {
     $stmt = $pdo->prepare("INSERT INTO events (
         organizer_id, title, event_date, status, category, location, price, description

@@ -291,7 +291,8 @@ final class Router
     /**
      * Avoids fatal "too many arguments" by checking arity:
      *  - 0 params -> call with ()
-     *  - 1 param  -> pass associative array of params
+     *  - 1 param typed array -> pass associative array of route params
+     *  - 1 param otherwise -> pass single route value (e.g. /events/{id})
      *  - 2+       -> pass positional params
      */
     private function callSmart(
@@ -312,7 +313,18 @@ final class Router
             }
 
             if ($n === 1) {
-                call_user_func($cb, $assocArgs);
+                $param = $ref->getParameters()[0];
+                if ($this->reflectionParamAcceptsArray($param)) {
+                    call_user_func($cb, $assocArgs);
+                    return;
+                }
+
+                $value = $positionalArgs[0] ?? reset($assocArgs);
+                call_user_func(
+                    $cb,
+                    $this->castRouteValueForParameter($param, $value),
+                );
+
                 return;
             }
 
@@ -321,6 +333,58 @@ final class Router
             // fallback: try positional
             call_user_func_array($cb, $positionalArgs);
         }
+    }
+
+    private function reflectionParamAcceptsArray(\ReflectionParameter $param): bool
+    {
+        $type = $param->getType();
+        if ($type === null) {
+            return false;
+        }
+        if ($type instanceof \ReflectionNamedType) {
+            return $type->getName() === "array";
+        }
+        if ($type instanceof \ReflectionUnionType) {
+            foreach ($type->getTypes() as $u) {
+                if ($u instanceof \ReflectionNamedType && $u->getName() === "array") {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    private function castRouteValueForParameter(
+        \ReflectionParameter $param,
+        $value,
+    ) {
+        $type = $param->getType();
+        if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
+            if ($type instanceof \ReflectionNamedType) {
+                $name = $type->getName();
+                if ($name === "int") {
+                    return (int) $value;
+                }
+                if ($name === "float") {
+                    return (float) $value;
+                }
+                if ($name === "string") {
+                    return (string) $value;
+                }
+                if ($name === "bool") {
+                    return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+
+            return $value;
+        }
+
+        return $value;
     }
 
     private function runMiddlewares(array $middlewares, array $assocArgs): bool
