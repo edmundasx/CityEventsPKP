@@ -21,8 +21,8 @@ final class EventDataMappingIntegrationTest extends TestCase
 
         try {
             // Įterpiame bandomąjį įrašą
-            $stmt = $pdo->prepare("INSERT INTO events (organizer_id, title, price, status, event_date, category, location) 
-                                   VALUES (1, 'Nemokamas testas', 0.00, 'approved', '2027-01-01 10:00:00', 'Test', 'Kaunas')");
+            $stmt = $pdo->prepare("INSERT INTO events (organizer_id, title, price, status, event_date, category, location, description) 
+                       VALUES (1, 'Nemokamas testas', 0.00, 'approved', '2027-01-01 10:00:00', 'Test', 'Kaunas', 'Testinis aprašymas')");
             $stmt->execute();
             $id = (int)$pdo->lastInsertId();
 
