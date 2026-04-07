@@ -25,7 +25,6 @@ jobs:
     name: Run PHPUnit Tests
     runs-on: ubuntu-latest
 
-    # Pakeliame MySQL servisą testams
     services:
       mysql:
         image: mysql:8.0
@@ -50,16 +49,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Prepare Database Schema
+      - name: Create Tables from Schema
         run: |
-          if [ -f "database/schema.sql" ]; then
-            mysql -h 127.0.0.1 -u root -proot cityevents < database/schema.sql
-          elif [ -f "schema.sql" ]; then
-            mysql -h 127.0.0.1 -u root -proot cityevents < schema.sql
-          else
-            echo "Schema file not found, skipping import. Ensure your migrations or schema file exists."
-          fi
-
+          mysql -h 127.0.0.1 -u root -proot cityevents < database/schema.sql
       - name: Run Integration Tests
         env:
           DB_HOST: 127.0.0.1
