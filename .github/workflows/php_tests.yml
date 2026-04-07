@@ -31,7 +31,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: city_events
+          MYSQL_DATABASE: cityevents
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -53,9 +53,9 @@ jobs:
       - name: Prepare Database Schema
         run: |
           if [ -f "database/schema.sql" ]; then
-            mysql -h 127.0.0.1 -u root -proot city_events < database/schema.sql
+            mysql -h 127.0.0.1 -u root -proot cityevents < database/schema.sql
           elif [ -f "schema.sql" ]; then
-            mysql -h 127.0.0.1 -u root -proot city_events < schema.sql
+            mysql -h 127.0.0.1 -u root -proot cityevents < schema.sql
           else
             echo "Schema file not found, skipping import. Ensure your migrations or schema file exists."
           fi
@@ -63,7 +63,7 @@ jobs:
       - name: Run Integration Tests
         env:
           DB_HOST: 127.0.0.1
-          DB_NAME: city_events
+          DB_NAME: cityevents
           DB_USER: root
           DB_PASS: root
         run: ./vendor/bin/phpunit --group integration
