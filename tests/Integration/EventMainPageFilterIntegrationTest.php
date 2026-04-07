@@ -7,11 +7,13 @@ use App\Core\Db;
 use App\Repositories\EventRepository;
 use PHPUnit\Framework\TestCase;
 
+/** @group integration */
 final class MainPageFilteringIntegrationTest extends TestCase
 {
     /**
-     * FUNKCINIS: Tikrinama, ar repository teisingai grąžina tik ateities renginius pagrindiniam puslapiui.
+     * FUNKCINIS: Tikrinama, ar repository teisingai grąžina tik ateities renginius.
      */
+	/** @group integration */
     public function testOnlyFutureEventsAreReturnedForMainPage(): void
     {
         $pdo = Db::pdo();
@@ -21,11 +23,11 @@ final class MainPageFilteringIntegrationTest extends TestCase
             $repo = new EventRepository($pdo);
             
             // 1. Sukuriamas praėjęs renginys
-            $this->createEvent($pdo, 'Praėjęs testas', '2000-01-01');
+            $this->createEvent($pdo, 'Praėjęs testas', '2000-01-01 12:00:00');
             // 2. Sukuriamas būsimas renginys
-            $this->createEvent($pdo, 'Būsimas testas', '2028-01-01');
+            $this->createEvent($pdo, 'Būsimas testas', '2028-01-01 12:00:00');
 
-            $events = $repo->getUpcomingEvents(10);
+            $events = $repo->homepageEvents(10);
 
             $titles = array_column($events, 'title');
             
@@ -37,23 +39,24 @@ final class MainPageFilteringIntegrationTest extends TestCase
     }
 
     /**
-     * NEFUNKCINIS: Našumo testas — užklausa gauti 50 renginių turi užtrukti < 100ms.
+     * NEFUNKCINIS: Našumo testas.
      */
+	/** @group integration */
     public function testUpcomingEventsQueryPerformance(): void
     {
         $pdo = Db::pdo();
         $repo = new EventRepository($pdo);
 
         $start = microtime(true);
-        $repo->getUpcomingEvents(50);
-        $duration = (microtime(true) - $start) * 1000; // Milisekundės
+        $repo->homepageEvents(50);
+        $duration = (microtime(true) - $start) * 1000;
 
-        $this->assertLessThan(100, $duration, "Pagrindinio puslapio krovimas turėtų būti greitesnis nei 100ms.");
+        $this->assertLessThan(100, $duration, "Užklausa per lėta.");
     }
 
     private function createEvent($pdo, $title, $date): void {
-        $stmt = $pdo->prepare("INSERT INTO events (organizer_id, title, event_date, status, category, location) 
-                               VALUES (1, ?, ?, 'approved', 'Test', 'Vilnius')");
+        $stmt = $pdo->prepare("INSERT INTO events (organizer_id, title, event_date, status, category, location, price) 
+                               VALUES (1, ?, ?, 'approved', 'Test', 'Vilnius', 0.00)");
         $stmt->execute([$title, $date]);
     }
 }

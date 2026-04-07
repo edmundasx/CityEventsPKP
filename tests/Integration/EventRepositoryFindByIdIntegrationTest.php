@@ -8,12 +8,9 @@ use App\Repositories\EventRepository;
 use PDO;
 use PDOException;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\Group;
 
-/**
- * Integraciniai testai tarp duomenų prieigos sluoksnio (EventRepository) ir MySQL.
- *
- * @group integration
- */
+#[Group('integration')]
 final class EventRepositoryFindByIdIntegrationTest extends TestCase
 {
     private static bool $dbOk = false;
