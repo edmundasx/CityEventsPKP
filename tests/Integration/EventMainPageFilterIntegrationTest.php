@@ -55,8 +55,10 @@ final class MainPageFilteringIntegrationTest extends TestCase
     }
 
     private function createEvent($pdo, $title, $date): void {
-        $stmt = $pdo->prepare("INSERT INTO events (organizer_id, title, event_date, status, category, location, price) 
-                               VALUES (1, ?, ?, 'approved', 'Test', 'Vilnius', 0.00)");
-        $stmt->execute([$title, $date]);
-    }
+    $stmt = $pdo->prepare("INSERT INTO events (
+        organizer_id, title, event_date, status, category, location, price, description
+    ) VALUES (1, ?, ?, 'approved', 'Test', 'Vilnius', 0.00, 'Testinis aprašymas')");
+    
+    $stmt->execute([$title, $date]);
+}
 }
