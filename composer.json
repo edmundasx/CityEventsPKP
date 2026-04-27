@@ -5,5 +5,17 @@
       "App\\": "src/"
     }
   },
+  "scripts": {
+    "test": [
+      "@test:cpg-70",
+      "@test:cpg-71",
+      "@test:admin:reject-success",
+      "@test:admin:reject-validation"
+    ],
+    "test:cpg-70": "php tests/AdminEventModerationRulesTest.php",
+    "test:cpg-71": "php tests/AdminEventRejectionRulesTest.php",
+    "test:admin:reject-success": "php tests/AdminPanelRejectEventIntegrationTest.php",
+    "test:admin:reject-validation": "php tests/AdminPanelRejectValidationIntegrationTest.php"
+  },
   "require": {}
 }

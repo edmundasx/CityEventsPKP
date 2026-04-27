@@ -116,6 +116,14 @@
 
     let currentTab = root.dataset.tab || "pending";
 
+    function emptyEventsMessage(tab) {
+      if (tab === "pending") {
+        return "Laukianciu patvirtinimo renginiu nera";
+      }
+
+      return "Sioje kategorijoje renginiu nera";
+    }
+
     function showToast(message) {
       if (!message) return;
       const toast = document.getElementById("toast");
@@ -151,6 +159,33 @@
       });
     }
 
+    function collectRejectReason(form) {
+      const actionInput = form.querySelector('input[name="action"]');
+      if (!(actionInput instanceof HTMLInputElement) || actionInput.value !== "reject") {
+        return true;
+      }
+
+      const reasonInput = form.querySelector('input[name="rejection_reason"]');
+      if (!(reasonInput instanceof HTMLInputElement)) {
+        return false;
+      }
+
+      // Atmetimo veiksmui reikalaujame administratoriaus ivestos priezasties pries siunciant forma.
+      const reason = window.prompt("Iveskite atmetimo priezasti:");
+      if (reason === null) {
+        return false;
+      }
+
+      const trimmedReason = reason.trim();
+      if (!trimmedReason) {
+        showToast("Butina nurodyti atmetimo priezasti.");
+        return false;
+      }
+
+      reasonInput.value = trimmedReason;
+      return true;
+    }
+
     function eventActionButtons(eventId, tab) {
       const hidden = (action, tabName) => [
         `<input type="hidden" name="event_id" value="${eventId}">`,
@@ -160,23 +195,23 @@
 
       if (tab === "pending") {
         return [
-          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("approve", "pending")}<button type="submit" class="admin-action-btn admin-action-approve">Approve</button></form>`,
-          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "pending")}<button type="submit" class="admin-action-btn admin-action-reject">Reject</button></form>`,
+          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("approve", "pending")}<button type="submit" class="admin-action-btn admin-action-approve">Patvirtinti</button></form>`,
+          `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "pending")}<button type="submit" class="admin-action-btn admin-action-reject">Atmesti</button></form>`,
         ].join("");
       }
 
       if (tab === "approved") {
-        return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "approved")}<button type="submit" class="admin-action-btn admin-action-reject">Reject</button></form>`;
+        return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("reject", "approved")}<button type="submit" class="admin-action-btn admin-action-reject">Atmesti</button></form>`;
       }
 
-      return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("restore", "rejected")}<button type="submit" class="admin-action-btn admin-action-restore">Return to pending</button></form>`;
+      return `<form method="post" action="${base}/admin/panel/event-status" class="admin-inline-form js-admin-event-form">${hidden("restore", "rejected")}<button type="submit" class="admin-action-btn admin-action-restore">Grazinti i laukima</button></form>`;
     }
 
     function renderEvents(events, tab) {
       if (!eventsBody) return;
 
       if (!Array.isArray(events) || events.length === 0) {
-        eventsBody.innerHTML = '<tr><td colspan="6" class="empty-state">No events in this category</td></tr>';
+        eventsBody.innerHTML = `<tr><td colspan="6" class="empty-state">${escapeHtml(emptyEventsMessage(tab))}</td></tr>`;
         return;
       }
 
@@ -232,7 +267,7 @@
       }).join("");
     }
 
-    async function fetchTabDate(tab) {
+    async function fetchTabData(tab) {
       const response = await fetch(`${base}/admin/panel/data?tab=${encodeURIComponent(tab)}`, {
         headers: {
           "X-Requested-With": "XMLHttpRequest",
@@ -256,14 +291,14 @@
       tabLink.addEventListener("click", (event) => {
         event.preventDefault();
         const tab = tabLink.dataset.tab || "pending";
-        fetchTabDate(tab);
+        fetchTabData(tab);
       });
     });
 
     statButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const targetTab = button.dataset.tabTarget || "pending";
-        fetchTabDate(targetTab);
+        fetchTabData(targetTab);
       });
     });
 
@@ -279,6 +314,10 @@
 
       event.preventDefault();
 
+      if (form.classList.contains("js-admin-event-form") && !collectRejectReason(form)) {
+        return;
+      }
+
       const response = await fetch(form.action, {
         method: "POST",
         headers: {
@@ -286,12 +325,12 @@
           "X-Requested-With": "XMLHttpRequest",
           Accept: "application/json",
         },
-        body: new URLSearchParams(new FormDate(form)).toString(),
+        body: new URLSearchParams(new FormData(form)).toString(),
       });
 
       const payload = await response.json();
-      if (!response.ok) {
-        showToast("Action failed.");
+      if (!response.ok || !payload.ok) {
+        showToast((payload && payload.message) || "Veiksmo atlikti nepavyko.");
         return;
       }
 
@@ -305,7 +344,7 @@
       if (payload.data && payload.data.events) {
         renderEvents(payload.data.events, currentTab);
       } else if (form.classList.contains("js-admin-event-form")) {
-        await fetchTabDate(currentTab);
+        await fetchTabData(currentTab);
       }
       if (payload.data && payload.data.users) {
         renderUsers(payload.data.users);

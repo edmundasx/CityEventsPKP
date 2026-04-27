@@ -22,6 +22,7 @@ $enableLoginModal = $enableLoginModal ?? false;
           <a class="nav-link" href="<?= $base ?>/user/panel">User Panel</a>
         <?php elseif ($role === "organizer"): ?>
           <a class="nav-link" href="<?= $base ?>/organizer/panel">Organizer Panel</a>
+          <!-- TIK ADMINISTRATORIUI LEIDZIAMA PRIEIGA PRIE ADMIN PANEL -->
         <?php elseif ($role === "admin"): ?>
           <a class="nav-link" href="<?= $base ?>/admin/panel">Admin Panel</a>
         <?php endif; ?>

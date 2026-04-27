@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Support\AdminEventModerationRules;
 use PDO;
 use Throwable;
 
@@ -30,6 +31,7 @@ final class AdminRepository
     public function eventsByTab(string $tab = "pending", int $limit = 30): array
     {
         try {
+            // Numatytoji administratoriaus skydelio uzklausa grazina laukiancius patvirtinimo renginius.
             [$whereSql] = $this->tabFilter($tab);
             $stmt = $this->pdo->prepare("
                 SELECT
@@ -40,7 +42,7 @@ final class AdminRepository
                     e.status,
                     e.updated_at,
                     u.name AS organizer_name
-                FROM events
+                FROM events e
                 LEFT JOIN users u ON u.id = e.organizer_id
                 WHERE {$whereSql}
                 ORDER BY e.updated_at DESC
@@ -65,6 +67,22 @@ final class AdminRepository
             return false;
         }
 
+        if (
+            AdminEventModerationRules::requiresReason($action) &&
+            trim((string) $rejectionReason) === ""
+        ) {
+            return false;
+        }
+
+        // Patvirtinimo funkcijai leidziame tik numatytus perejimus tarp renginio busenu.
+        $currentStatus = $this->eventStatusById($eventId);
+        if (
+            $currentStatus === null ||
+            !AdminEventModerationRules::canApplyAction($currentStatus, $action)
+        ) {
+            return false;
+        }
+
         $status = match ($action) {
             "approve" => "approved",
             "reject" => "rejected",
@@ -83,11 +101,10 @@ final class AdminRepository
             $stmt->bindValue(":id", $eventId, PDO::PARAM_INT);
             $stmt->bindValue(":status", $status, PDO::PARAM_STR);
             if ($status === "rejected") {
+                // Atmetimo veiksmui issaugome administratoriaus ivesta priezasti.
                 $stmt->bindValue(
                     ":reason",
-                    $rejectionReason !== null && trim($rejectionReason) !== ""
-                        ? trim($rejectionReason)
-                        : "Atmesta administratoriaus",
+                    trim((string) $rejectionReason),
                     PDO::PARAM_STR,
                 );
             } else {
@@ -168,6 +185,25 @@ final class AdminRepository
             "rejected" => ["e.status IN ('rejected','declined','rejected_by_admin')"],
             default => ["e.status = 'pending'"],
         };
+    }
+
+    private function eventStatusById(int $eventId): ?string
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT status
+                FROM events
+                WHERE id = :id
+                LIMIT 1
+            ");
+            $stmt->bindValue(":id", $eventId, PDO::PARAM_INT);
+            $stmt->execute();
+            $status = $stmt->fetchColumn();
+
+            return is_string($status) ? strtolower($status) : null;
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function safeCount(string $sql): int

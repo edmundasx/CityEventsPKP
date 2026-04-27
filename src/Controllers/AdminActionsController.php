@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -6,34 +6,30 @@ namespace App\Controllers;
 use App\Auth\Auth;
 use App\Core\Db;
 use App\Repositories\AdminRepository;
+use App\Support\AdminEventModerationRules;
 
 final class AdminActionsController
 {
     public function eventStatus(): void
     {
         $eventId = (int) ($_POST["event_id"] ?? 0);
-        $action = (string) ($_POST["action"] ?? "");
+        $action = strtolower((string) ($_POST["action"] ?? ""));
         $tab = (string) ($_POST["tab"] ?? "pending");
-        $reason = (string) ($_POST["rejection_reason"] ?? "");
+        $reason = trim((string) ($_POST["rejection_reason"] ?? ""));
 
-        $repo = new AdminRepository(Db::pdo());
-        $ok = $eventId > 0 && $repo->updateEventStatus($eventId, $action, $reason);
-
-        $message = $ok
-            ? "Event status updated."
-            : "Failed to update event status.";
-
-        if ($this->isAjaxRequest()) {
-            $this->jsonResponse(200, [
-                "ok" => $ok,
-                "message" => $message,
-                "data" => $this->buildPanelDate($tab),
-            ]);
+        if (AdminEventModerationRules::requiresReason($action) && $reason === "") {
+            $this->respondWithEventStatusResult(
+                false,
+                "Būtina nurodyti atmetimo priežastį.",
+                $tab,
+            );
             return;
         }
 
-        $_SESSION["admin_flash"] = $message;
-        header("Location: " . $this->basePath() . "/admin/panel?tab=" . rawurlencode($tab));
+        $repo = new AdminRepository(Db::pdo());
+        // Atmetant rengini priezastis yra privaloma ir perduodama i saugojimo logika.
+        $ok = $eventId > 0 && $repo->updateEventStatus($eventId, $action, $reason);
+        $this->respondWithEventStatusResult($ok, $this->eventStatusMessage($action, $ok), $tab);
     }
 
     public function userRole(): void
@@ -67,12 +63,12 @@ final class AdminActionsController
         header("Location: " . $this->basePath() . "/admin/panel?tab=pending");
     }
 
-    public function panelDate(): void
+    public function panelData(): void
     {
         $tab = (string) ($_GET["tab"] ?? "pending");
         $this->jsonResponse(200, [
             "ok" => true,
-            "data" => $this->buildPanelDate($tab),
+            "data" => $this->buildPanelData($tab),
         ]);
     }
 
@@ -85,10 +81,12 @@ final class AdminActionsController
         return $base;
     }
 
-    private function buildPanelDate(string $tab): array
+    private function buildPanelData(string $tab): array
     {
         $repo = new AdminRepository(Db::pdo());
         $stats = $repo->stats();
+
+        // Sis endpointas grizta su admin puslapio sekciju duomenimis AJAX atnaujinimui.
         return [
             "tab" => $tab,
             "stats" => $stats,
@@ -96,6 +94,42 @@ final class AdminActionsController
             "events" => $repo->eventsByTab($tab, 30),
             "users" => $repo->latestUsers(10),
         ];
+    }
+
+    private function respondWithEventStatusResult(bool $ok, string $message, string $tab): void
+    {
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(200, [
+                "ok" => $ok,
+                "message" => $message,
+                "data" => $this->buildPanelData($tab),
+            ]);
+            return;
+        }
+
+        $_SESSION["admin_flash"] = $message;
+        header("Location: " . $this->basePath() . "/admin/panel?tab=" . rawurlencode($tab));
+    }
+
+    private function eventStatusMessage(string $action, bool $ok): string
+    {
+        $action = strtolower($action);
+
+        if ($ok) {
+            return match ($action) {
+                "approve" => "Renginys patvirtintas.",
+                "reject" => "Renginys atmestas.",
+                "restore" => "Renginys grazintas i laukimo busena.",
+                default => "Renginio busena atnaujinta.",
+            };
+        }
+
+        return match ($action) {
+            "approve" => "Nepavyko patvirtinti renginio.",
+            "reject" => "Nepavyko atmesti renginio.",
+            "restore" => "Nepavyko grazinti renginio i laukimo busena.",
+            default => "Nepavyko atnaujinti renginio busenos.",
+        };
     }
 
     private function isAjaxRequest(): bool

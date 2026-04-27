@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -62,6 +62,7 @@ final class PanelController
         $authUser = Auth::user() ?? [];
 
         $repo = new AdminRepository(Db::pdo());
+        // Administratoriaus skydeliui uzkrauname laukianciu patvirtinimo renginiu sarasa ir jo duomenis vaizdavimui.
         $stats = $repo->stats();
         $events = $repo->eventsByTab($tab, 30);
         $users = $repo->latestUsers(10);
