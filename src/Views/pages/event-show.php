@@ -17,129 +17,180 @@ $date = $event["date"] ?? "";
 $time = $event["time"] ?? "";
 $location = $event["location"] ?? "";
 $price = $event["price"] ?? "";
-$priceRaw = isset($event["price_raw"]) ? (float) $event["price_raw"] : null;
 $description = $event["description"] ?? "";
 $image = $event["image"] ?? "";
 $category = $event["category"] ?? "";
 $district = $event["district"] ?? "";
-$organizerName = trim((string) ($event["organizer_name"] ?? "CityEvents organizatorius"));
-$organizerInitial = strtoupper(substr($organizerName !== "" ? $organizerName : "C", 0, 1));
+$isLoggedIn = (bool) ($isLoggedIn ?? false);
+$isPastEvent = (bool) ($isPastEvent ?? false);
+$hasReminder = (bool) ($hasReminder ?? false);
+$currentReminderMinutes = isset($currentReminderMinutes) ? (int) $currentReminderMinutes : null;
+$reminderOptions = is_array($reminderOptions ?? null) ? $reminderOptions : [
+  30 => "30 min.",
+  60 => "1 val.",
+  1440 => "1 diena",
+];
+$eventId = (int) ($event["id"] ?? 0);
+$returnTo = $base . "/events/" . $eventId;
 
-$priceBadge = "Nemokama";
-if ($priceRaw !== null && $priceRaw > 0) {
-    $priceBadge = $price !== "" ? $price : "€" . number_format($priceRaw, 2, ".", "");
+$currentReminderLabel = "";
+if (
+  $currentReminderMinutes !== null &&
+  isset($reminderOptions[$currentReminderMinutes])
+) {
+  $currentReminderLabel = (string) $reminderOptions[$currentReminderMinutes];
 }
-$aboutText = $description !== "" ? $description : "Šiam renginiui dar nėra aprašymo.";
 ?>
 
-<style>
-  .event-show-page { padding: 1.5rem 0 3rem; }
-  .event-show-grid { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); }
-  .event-show-main { display: grid; gap: 1.25rem; min-width: 0; }
-  .event-show-tag { display: inline-flex; width: fit-content; border-radius: 9999px; background: #fff1eb; color: #ff6b35; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; padding: 0.35rem 0.65rem; text-transform: lowercase; }
-  .event-show-title { margin-top: 0.75rem; font-size: clamp(1.9rem, 3.4vw, 2.6rem); font-weight: 800; line-height: 1.12; color: #232b38; }
-  .event-show-card { border: 1px solid #e2e8f0; border-radius: 0.75rem; background: #fff; padding: 1.2rem; }
-  .event-show-card-title { color: #232b38; font-size: 1.9rem; margin-bottom: 0.7rem; font-weight: 700; }
-  .event-show-text { color: #334155; line-height: 1.7; }
-  .event-show-text + .event-show-text { margin-top: 0.85rem; }
-  .event-show-info-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
-  .event-show-info-item { display: flex; align-items: center; gap: 0.6rem; color: #0f172a; }
-  .event-show-info-icon { color: #ff6b35; font-size: 1.05rem; line-height: 1; }
-  .event-show-info-label { font-weight: 700; color: #1e293b; margin-right: 0.2rem; }
-  .event-show-bullets { margin: 0; padding-left: 1.1rem; color: #475569; display: grid; gap: 0.5rem; }
-  .event-show-org-row { display: flex; align-items: center; gap: 0.8rem; background: #f1f5f9; border-radius: 0.6rem; padding: 0.75rem; }
-  .event-show-org-avatar { width: 2.4rem; height: 2.4rem; border-radius: 9999px; background: #ff6b35; color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; }
-  .event-show-org-name { font-weight: 700; color: #1e293b; line-height: 1.2; }
-  .event-show-org-status { color: #64748b; font-size: 0.875rem; }
-  .event-show-aside-card { border: 1px solid #e2e8f0; border-radius: 0.75rem; background: #fff; padding: 1.15rem; position: sticky; top: 5.25rem; }
-  .event-show-price { font-size: 2.15rem; line-height: 1.1; font-weight: 800; color: #ff6b35; margin: 0 0 1rem; }
-  .event-show-actions { display: grid; gap: 0.55rem; }
-  .event-show-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; border-radius: 0.5rem; padding: 0.63rem 0.8rem; font-weight: 700; border: 1px solid #ff6b35; transition: all 0.2s ease; text-decoration: none; }
-  .event-show-btn--primary { background: #ff6b35; color: #fff; }
-  .event-show-btn--primary:hover { background: #ee5a26; border-color: #ee5a26; }
-  .event-show-btn--outline { background: #fff; color: #1e293b; border-color: #d1d5db; }
-  .event-show-btn--outline:hover { border-color: #ff6b35; color: #ff6b35; }
-  .event-show-note { margin-top: 0.55rem; color: #64748b; font-size: 0.82rem; text-align: center; }
-  .event-show-image { width: 100%; border-radius: 0.75rem; max-height: 330px; object-fit: cover; border: 1px solid #e2e8f0; }
-  @media (min-width: 1024px) {
-    .event-show-grid { grid-template-columns: minmax(0, 1fr) 16.5rem; align-items: start; }
-  }
-</style>
-
-<article class="container-ce section event-show-page">
-  <div class="event-show-grid">
-    <div class="event-show-main">
-      <?php if ($category !== ""): ?>
-        <span class="event-show-tag"><?= $e(strtolower($category)) ?></span>
-      <?php endif; ?>
-
-      <h1 class="event-show-title"><?= $e($titleText) ?></h1>
-
-      <section class="event-show-card">
-        <h2 class="event-show-card-title">Apie renginį</h2>
-        <p class="event-show-text"><?= nl2br($e($aboutText)) ?></p>
+<main class="container-ce section">
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+    <!-- Left Column: Content -->
+    <div class="space-y-8">
+      <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
         <?php if ($image !== ""): ?>
-          <img src="<?= $e($image) ?>" alt="<?= $e($titleText) ?>" class="event-show-image">
+          <div class="aspect-video w-full overflow-hidden">
+            <img src="<?= $e($image) ?>" alt="<?= $e($titleText) ?>" class="w-full h-full object-cover">
+          </div>
         <?php endif; ?>
-      </section>
-
-      <section class="event-show-card">
-        <h2 class="event-show-card-title">Renginio informacija</h2>
-        <ul class="event-show-info-list">
-          <li class="event-show-info-item">
-            <span class="event-show-info-icon" aria-hidden="true">📅</span>
-            <span><span class="event-show-info-label">Data:</span><?= $e(trim($date . ($time !== "" ? " " . $time : ""))) ?></span>
-          </li>
-          <li class="event-show-info-item">
-            <span class="event-show-info-icon" aria-hidden="true">🕒</span>
-            <span><span class="event-show-info-label">Laikas:</span><?= $e($time !== "" ? $time : "Nenurodyta") ?></span>
-          </li>
-          <li class="event-show-info-item">
-            <span class="event-show-info-icon" aria-hidden="true">📍</span>
-            <span><span class="event-show-info-label">Vieta:</span><?= $e($location !== "" ? $location : "Nenurodyta") ?></span>
-          </li>
-          <?php if ($district !== ""): ?>
-            <li class="event-show-info-item">
-              <span class="event-show-info-icon" aria-hidden="true">🏙️</span>
-              <span><span class="event-show-info-label">Rajonas:</span><?= $e($district) ?></span>
-            </li>
-          <?php endif; ?>
-          <li class="event-show-info-item">
-            <span class="event-show-info-icon" aria-hidden="true">💶</span>
-            <span><span class="event-show-info-label">Kaina:</span><?= $e($price !== "" ? $price : "Nemokama") ?></span>
-          </li>
-        </ul>
-      </section>
-
-      <section class="event-show-card">
-        <h2 class="event-show-card-title">Kas jūsų laukia</h2>
-        <ul class="event-show-bullets">
-          <li>Nauja patirtis</li>
-          <li>Idomus renginio turinys</li>
-          <li>Daugiau veiklu mieste</li>
-        </ul>
-      </section>
-
-      <section class="event-show-card">
-        <h2 class="event-show-card-title">Organizatorius</h2>
-        <div class="event-show-org-row">
-          <span class="event-show-org-avatar"><?= $e($organizerInitial) ?></span>
-          <div>
-            <p class="event-show-org-name"><?= $e($organizerName) ?></p>
-            <p class="event-show-org-status">Patvirtinta</p>
+        
+        <div class="p-8">
+          <div class="flex flex-wrap gap-2 mb-4">
+            <?php if ($category !== ""): ?>
+              <span class="bg-brand/10 text-brand px-3 py-1 rounded-md text-sm font-semibold uppercase tracking-wider"><?= $e($category) ?></span>
+            <?php endif; ?>
+            <?php if ($district !== ""): ?>
+              <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-sm font-semibold uppercase tracking-wider"><?= $e($district) ?></span>
+            <?php endif; ?>
+          </div>
+          
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight"><?= $e($titleText) ?></h1>
+          
+          <div class="prose prose-slate max-w-none">
+            <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+              Renginio aprašymas
+            </h2>
+            <div class="text-slate-600 text-lg leading-relaxed whitespace-pre-wrap">
+              <?= nl2br($e($description !== "" ? $description : "Šiam renginiui dar nėra aprašymo.")) ?>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
 
-    <aside class="event-show-aside-card">
-      <p class="event-show-price"><?= $e($priceBadge) ?></p>
-      <div class="event-show-actions">
-        <a href="#" class="event-show-btn event-show-btn--primary">Gauti bilietus</a>
-        <button type="button" class="event-show-btn event-show-btn--outline">Prideti i megstamus</button>
+    <!-- Right Column: Sidebar Info Card -->
+    <aside class="space-y-6">
+      <div class="bg-white rounded-2xl p-6 shadow-md border border-slate-100 sticky top-4">
+        <h3 class="text-lg font-bold text-slate-900 mb-6 pb-4 border-b border-slate-100">Renginio informacija</h3>
+        
+        <div class="space-y-6">
+          <div class="flex gap-4">
+            <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-brand flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+              <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Data</div>
+              <div class="text-slate-900 font-semibold"><?= $e($date) ?></div>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-brand flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Laikas</div>
+              <div class="text-slate-900 font-semibold"><?= $e($time) ?></div>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-brand flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Vieta</div>
+              <div class="text-slate-900 font-semibold"><?= $e($location) ?></div>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-brand flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div>
+              <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Kaina</div>
+              <div class="text-slate-900 font-bold text-xl"><?= $e($price) ?></div>
+            </div>
+          </div>
+
+          <button class="w-full bg-brand hover:bg-brand-dark text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-brand/20 active:scale-95 mt-4">
+            Dalyvauti renginyje
+          </button>
+
+          <div class="rounded-xl border border-slate-200 p-4 bg-slate-50/70">
+            <details class="group" <?= ($isLoggedIn && !$isPastEvent) ? "" : "open" ?> >
+              <summary class="list-none <?= ($isLoggedIn && !$isPastEvent) ? "cursor-pointer" : "cursor-not-allowed pointer-events-none" ?>">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center <?= !$isLoggedIn || $isPastEvent
+                        ? "bg-slate-200 text-slate-400"
+                        : ($hasReminder ? "bg-amber-100 text-amber-500" : "bg-slate-100 text-slate-600") ?>">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.674C19.41 13.956 18 12.499 18 8a6 6 0 0 0-12 0c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Priminimas</p>
+                      <?php if (!$isLoggedIn): ?>
+                        <p class="text-sm text-slate-500 font-semibold">Prisijunkite, kad nustatytumete priminima</p>
+                      <?php elseif ($isPastEvent): ?>
+                        <p class="text-sm text-slate-500 font-semibold">Renginys jau pasibaiges</p>
+                      <?php elseif ($hasReminder): ?>
+                        <p class="text-sm text-amber-700 font-semibold">Nustatytas: <?= $e($currentReminderLabel) ?> pries rengini</p>
+                      <?php else: ?>
+                        <p class="text-sm text-slate-700 font-semibold">Pasirinkite, kada priminti apie rengini</p>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500 transition-transform group-open:rotate-180 <?= (!$isLoggedIn || $isPastEvent) ? "opacity-40" : "" ?>"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </summary>
+
+              <?php if ($isLoggedIn && !$isPastEvent): ?>
+                <div class="pt-4 mt-4 border-t border-slate-200 space-y-3">
+                  <form method="post" action="<?= $base ?>/events/<?= $eventId ?>/reminder" class="space-y-3">
+                    <input type="hidden" name="return_to" value="<?= $e($returnTo) ?>">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <?php foreach ($reminderOptions as $minutes => $label): ?>
+                        <?php $minutesInt = (int) $minutes; ?>
+                        <label class="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition <?= $currentReminderMinutes === $minutesInt ? "border-amber-400 bg-amber-50 text-amber-800" : "border-slate-200 bg-white text-slate-700 hover:border-brand/40" ?>">
+                          <input type="radio" name="minutes_before" value="<?= $minutesInt ?>" class="accent-brand" required <?= $currentReminderMinutes === $minutesInt ? "checked" : "" ?>>
+                          <span class="font-semibold"><?= $e($label) ?></span>
+                        </label>
+                      <?php endforeach; ?>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand hover:bg-brand-dark text-white font-bold py-3 rounded-xl transition-all">
+                      <?= $hasReminder ? "Atnaujinti priminima" : "Issaugoti priminima" ?>
+                    </button>
+                  </form>
+
+                  <?php if ($hasReminder): ?>
+                    <form method="post" action="<?= $base ?>/events/<?= $eventId ?>/reminder/delete">
+                      <input type="hidden" name="return_to" value="<?= $e($returnTo) ?>">
+                      <button type="submit" class="w-full bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition-all">
+                        Istrinti priminima
+                      </button>
+                    </form>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
+            </details>
+          </div>
+        </div>
       </div>
-      <p class="event-show-note">Galimi bilietai</p>
     </aside>
   </div>
-</article>
+</main>
 

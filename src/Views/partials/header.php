@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Auth\Auth;
 
@@ -14,7 +14,7 @@ $enableLoginModal = $enableLoginModal ?? false;
       <a href="<?= $base ?>/home" class="logo">CityEvents</a>
 
       <nav class="nav">
-        <a class="nav-link" href="<?= $base ?>/home#events">Events</a>
+        <a class="nav-link" href="<?= $base ?>/events">Events</a>
         <a class="nav-link" href="<?= $base ?>/map">Map</a>
         <a class="nav-link" href="<?= $base ?>/organizers">For Organizers</a>
         <a class="nav-link" href="<?= $base ?>/help">Help</a>

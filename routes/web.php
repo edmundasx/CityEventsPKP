@@ -61,5 +61,13 @@ return function (Router $router): void {
         new RoleMiddleware(["admin"]),
     ]);
 
+    $router->get("/events", "EventController@index");
+    $router->get("/events/filter", "EventController@filter");
     $router->get("/events/{id:\d+}", "EventController@show");
+    $router->post("/events/{id:\\d+}/reminder", "EventReminderController@save", [
+        new RoleMiddleware(["user"]),
+    ]);
+    $router->post("/events/{id:\\d+}/reminder/delete", "EventReminderController@delete", [
+        new RoleMiddleware(["user"]),
+    ]);
 };

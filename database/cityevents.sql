@@ -133,6 +133,22 @@ INSERT INTO `event_drafts` (`id`, `organizer_id`, `title`, `description`, `categ
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `event_reminders`
+--
+
+CREATE TABLE `event_reminders` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `event_id` bigint(20) UNSIGNED NOT NULL,
+  `minutes_before` int(11) NOT NULL,
+  `remind_at` datetime NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `favorites`
 --
 
@@ -367,6 +383,15 @@ ALTER TABLE `event_drafts`
   ADD KEY `idx_event_drafts_organizer` (`organizer_id`);
 
 --
+-- Indexes for table `event_reminders`
+--
+ALTER TABLE `event_reminders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_event_reminders_user_event` (`user_id`,`event_id`),
+  ADD KEY `idx_event_reminders_remind_at` (`remind_at`),
+  ADD KEY `idx_event_reminders_event_id` (`event_id`);
+
+--
 -- Indexes for table `favorites`
 --
 ALTER TABLE `favorites`
@@ -420,6 +445,12 @@ ALTER TABLE `event_drafts`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
+-- AUTO_INCREMENT for table `event_reminders`
+--
+ALTER TABLE `event_reminders`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `favorites`
 --
 ALTER TABLE `favorites`
@@ -470,6 +501,13 @@ ALTER TABLE `events`
 --
 ALTER TABLE `event_drafts`
   ADD CONSTRAINT `fk_event_drafts_organizer` FOREIGN KEY (`organizer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `event_reminders`
+--
+ALTER TABLE `event_reminders`
+  ADD CONSTRAINT `fk_event_reminders_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_event_reminders_event` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `favorites`

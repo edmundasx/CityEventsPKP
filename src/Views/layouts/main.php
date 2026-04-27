@@ -13,6 +13,7 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
       "City Events - Discover events you love" ?></title>
   <meta name="description" content="Find and join events, browse organizers, or create your own event.">
   <link rel="stylesheet" href="<?= $base ?>/assets/css/tailwind.css">
+  <link rel="stylesheet" href="<?= $base ?>/assets/css/app.css">
   <?php if (!empty($pageStyles) && is_array($pageStyles)): ?>
     <?php foreach ($pageStyles as $style): ?>
       <link rel="stylesheet" href="<?= htmlspecialchars($style) ?>">
