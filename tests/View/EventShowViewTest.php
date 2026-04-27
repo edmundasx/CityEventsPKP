@@ -10,6 +10,20 @@ final class EventShowViewTest extends TestCase
     public function testEventDetailsPageDisplaysAllMainInformation(): void
     {
         $base = "";
+        $isLoggedIn = false;
+        $isPastEvent = false;
+        $hasReminder = false;
+        $currentReminderMinutes = null;
+        $reminderOptions = [
+            15 => "15 min.",
+            30 => "30 min.",
+            60 => "1 val.",
+            120 => "2 val.",
+            360 => "6 val.",
+            720 => "12 val.",
+            1440 => "1 diena",
+        ];
+
         $event = [
             "id" => 123,
             "title" => "Test Event",
@@ -38,7 +52,12 @@ final class EventShowViewTest extends TestCase
 
         // Data ir laikas
         $this->assertStringContainsString(
-            "2026-03-17 18:30",
+            "2026-03-17",
+            $html,
+            "Puslapyje turi buti rodoma renginio data"
+        );
+        $this->assertStringContainsString(
+            "18:30",
             $html,
             "Puslapyje turi būti rodoma renginio data ir laikas"
         );
@@ -75,6 +94,56 @@ final class EventShowViewTest extends TestCase
             $html,
             "Puslapyje turi būti rodomas renginio rajonas"
         );
+
+        // Neprisijungusio vartotojo priminimo ikonėle turi buti uzpilkinta.
+        $this->assertStringContainsString(
+            "bg-slate-200 text-slate-400",
+            $html,
+            "Neprisijungusio vartotojo priminimo ikonėle turi buti pilka"
+        );
+
+    }
+
+    public function testLoggedInUserSeesExtendedReminderOptions(): void
+    {
+        $base = "";
+        $isLoggedIn = true;
+        $isPastEvent = false;
+        $hasReminder = true;
+        $currentReminderMinutes = 60;
+        $reminderOptions = [
+            15 => "15 min.",
+            30 => "30 min.",
+            60 => "1 val.",
+            120 => "2 val.",
+            360 => "6 val.",
+            720 => "12 val.",
+            1440 => "1 diena",
+        ];
+
+        $event = [
+            "id" => 99,
+            "title" => "Future Event",
+            "description" => "Example",
+            "date" => "2026-07-11",
+            "time" => "19:00",
+            "location" => "Center",
+            "price" => "€10.00",
+            "category" => "Tech",
+            "district" => "West",
+            "image" => "/images/example.jpg",
+        ];
+
+        ob_start();
+        require __DIR__ . "/../../src/Views/pages/event-show.php";
+        $html = ob_get_clean();
+
+        self::assertNotFalse($html);
+        $this->assertStringContainsString("Nustatytas:", $html);
+        $this->assertStringContainsString("15 min.", $html);
+        $this->assertStringContainsString("2 val.", $html);
+        $this->assertStringContainsString("12 val.", $html);
+        $this->assertStringContainsString("Istrinti priminima", $html);
     }
 }
 
