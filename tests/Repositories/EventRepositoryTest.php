@@ -33,6 +33,18 @@ final class EventRepositoryTest extends TestCase
             )
         ");
 
+        $this->pdo->exec("
+            CREATE TABLE event_reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                event_id INTEGER NOT NULL,
+                minutes_before INTEGER NOT NULL,
+                remind_at DATETIME NOT NULL,
+                created_at DATETIME NOT NULL,
+                updated_at DATETIME NOT NULL
+            )
+        ");
+
         $this->repository = new EventRepository($this->pdo);
 
         // Seed some data
@@ -97,5 +109,34 @@ final class EventRepositoryTest extends TestCase
         $events = $this->repository->filterEvents($filters);
 
         $this->assertCount(3, $events); // 3 approved, 1 pending
+    }
+
+    public function testSaveReminderUpdatesExistingAndDoesNotDuplicate(): void
+    {
+        $saved = $this->repository->saveReminder(7, 1, 30);
+        $this->assertTrue($saved);
+
+        $savedAgain = $this->repository->saveReminder(7, 1, 60);
+        $this->assertTrue($savedAgain);
+
+        $stmt = $this->pdo->query("SELECT COUNT(*) AS cnt FROM event_reminders WHERE user_id = 7 AND event_id = 1");
+        $countRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        $this->assertSame(1, (int) ($countRow["cnt"] ?? 0));
+
+        $reminder = $this->repository->findReminderForUser(7, 1);
+        $this->assertIsArray($reminder);
+        $this->assertSame(60, (int) ($reminder["minutes_before"] ?? 0));
+    }
+
+    public function testDeleteReminderRemovesExistingReminder(): void
+    {
+        $saved = $this->repository->saveReminder(9, 2, 1440);
+        $this->assertTrue($saved);
+
+        $deleted = $this->repository->deleteReminder(9, 2);
+        $this->assertTrue($deleted);
+
+        $reminder = $this->repository->findReminderForUser(9, 2);
+        $this->assertNull($reminder);
     }
 }
