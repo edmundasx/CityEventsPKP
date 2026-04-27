@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   if (window.__authModalInit) {
     return;
   }
@@ -70,8 +70,14 @@
 
       config.form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const formDate = new FormDate(config.form);
-        const body = new URLSearchParams(formDate);
+        
+        const submitBtn = config.form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.textContent : "";
+        
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Processing...";
+        }
 
         if (config.errorBox) {
           config.errorBox.textContent = "";
@@ -79,6 +85,12 @@
         }
 
         try {
+          const formData = new FormData(config.form);
+          const body = new URLSearchParams();
+          for (const [key, value] of formData.entries()) {
+            body.append(key, value);
+          }
+
           const response = await fetch(config.form.action, {
             method: "POST",
             headers: {
@@ -89,22 +101,39 @@
             body: body.toString(),
           });
 
-          const data = await response.json();
+          const text = await response.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            console.error("Non-JSON response:", text);
+            throw new Error("Server returned an invalid response format.");
+          }
+
           if (!response.ok || !data.ok) {
             const message = (data && data.message) || config.fallbackError;
             if (config.errorBox) {
               config.errorBox.textContent = message;
               config.errorBox.classList.remove("hidden");
             }
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = originalBtnText;
+            }
             return;
           }
 
           const redirectUrl = data.redirect || window.location.href;
           window.location.assign(redirectUrl);
-        } catch (_error) {
+        } catch (err) {
+          console.error("Auth error:", err);
           if (config.errorBox) {
             config.errorBox.textContent = "Server error. Please try again.";
             config.errorBox.classList.remove("hidden");
+          }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
           }
         }
       });
