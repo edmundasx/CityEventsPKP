@@ -21,7 +21,7 @@ CREATE TABLE events (
     organizer_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(200) NOT NULL,
     description TEXT NOT NULL,
-    category VARCHAR(60) NOT NULL,
+    category VARCHAR(255) NOT NULL,
     location VARCHAR(255) NOT NULL,
     lat DECIMAL(10,6) NULL,
     lng DECIMAL(10,6) NULL,
@@ -75,25 +75,6 @@ CREATE TABLE notifications (
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_notifications_user ON notifications (user_id);
-
--- Renginių juodraščiai
-CREATE TABLE event_drafts (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    organizer_id BIGINT UNSIGNED NOT NULL,
-    title VARCHAR(200) NULL,
-    description TEXT NULL,
-    category VARCHAR(60) NULL,
-    location VARCHAR(255) NULL,
-    event_date DATETIME NULL,
-    event_time TIME NULL,
-    price DECIMAL(10,2) NULL,
-    status ENUM('draft', 'pending') NOT NULL DEFAULT 'draft',
-    cover_image TEXT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_event_drafts_organizer FOREIGN KEY (organizer_id) REFERENCES users(id) ON DELETE CASCADE
-);
-CREATE INDEX idx_event_drafts_organizer ON event_drafts (organizer_id);
 
 -- Organizatoriaus veiklos žurnalas
 CREATE TABLE organizer_activity (

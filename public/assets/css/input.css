@@ -38,6 +38,13 @@
     .hero-inner {
         @apply absolute inset-0 z-10 flex items-center justify-center py-14 pointer-events-none;
     }
+
+    /* Prevent flex re-center from cancelling translateY when headline collapses during search */
+    .hero.hero--search-focused .hero-inner {
+        @apply items-start justify-center;
+        padding-top: min(14vh, 6rem);
+        padding-bottom: calc(var(--spacing) * 10);
+    }
     /* Children default to pointer-events: auto — without this, the full-width inner wrapper blocks the map. */
     .hero-inner > .container-ce {
         pointer-events: none;
@@ -50,6 +57,26 @@
     }
     .hero-lead {
         @apply mt-4 text-white/90 md:text-lg;
+    }
+
+    .hero-discover {
+        @apply overflow-hidden opacity-100 transition-[opacity,max-height,margin,padding] duration-300 ease-out;
+        max-height: 14rem;
+    }
+
+    .hero.hero--search-focused .hero-discover {
+        max-height: 0;
+        margin: 0;
+        padding: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hero-discover,
+        .search-wrap {
+            transition-duration: 0.01ms;
+        }
     }
 
     .home-hero-map-bg {
@@ -68,6 +95,12 @@
     /* search: outer wrap passes clicks to map; bar + fields use pointer-events auto */
     .search-wrap {
         @apply mx-auto mt-8 max-w-3xl pointer-events-none;
+        transform: translateY(0);
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .hero.hero--search-focused .search-wrap {
+        transform: translateY(calc(min(28vh, 12rem) * 1.5));
     }
     .search-bar {
         @apply pointer-events-auto flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
@@ -110,14 +143,22 @@
         @apply mt-0.5 block text-xs text-slate-500;
     }
     /* categories */
-    .cats-grid,
-    .categories-content {
+    .cats-grid {
         @apply grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6;
+    }
+    .categories-content {
+        @apply flex min-h-0 w-full min-w-0 flex-nowrap gap-3 overflow-hidden;
+    }
+    .categories-content--expanded {
+        @apply flex-wrap items-start overflow-visible;
     }
     .cat-btn,
     .category {
-        @apply flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left
-               font-semibold text-slate-800 hover:border-brand hover:text-brand transition;
+        @apply flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left font-inherit
+               text-sm font-semibold leading-normal text-slate-800 hover:border-brand hover:text-brand transition;
+    }
+    .categories {
+        @apply space-y-3;
     }
     .category {
         @apply cursor-pointer select-none;
@@ -128,20 +169,48 @@
     }
     .cat-label,
     .category-label {
-        @apply text-sm;
+        @apply whitespace-nowrap text-sm;
     }
     .cat-btn.is-active,
     .category.is-active {
         @apply border-brand bg-brand text-white;
     }
     .home-map-popup-title {
-        @apply font-semibold text-slate-900;
+        @apply text-xs font-semibold leading-relaxed text-slate-900;
     }
     .home-map-popup-meta {
-        @apply text-xs text-slate-600;
+        @apply text-xs leading-relaxed text-slate-600;
+    }
+    .home-map-popup-text-stack {
+        @apply flex flex-col gap-1;
+    }
+    .home-map-popup {
+        @apply overflow-hidden;
+    }
+    .home-map-popup-body {
+        @apply px-4 pb-4 pt-3;
+    }
+    .home-map-popup-media {
+        @apply relative mb-0 h-24 w-full overflow-hidden rounded-none bg-slate-200;
+    }
+    .home-map-popup-image {
+        @apply h-full w-full object-cover;
+    }
+    .home-map-popup-image-placeholder {
+        @apply h-full w-full bg-slate-200;
     }
     .home-map-popup-link {
-        @apply mt-2 inline-block text-xs font-semibold text-brand;
+        @apply block text-xs font-normal leading-relaxed text-slate-600 underline decoration-slate-400 underline-offset-2 transition hover:text-brand hover:decoration-brand;
+    }
+
+    .leaflet-popup.home-map-leaflet-popup .leaflet-popup-content-wrapper {
+        @apply p-0 overflow-hidden rounded-xl;
+    }
+    .leaflet-popup.home-map-leaflet-popup .leaflet-popup-content {
+        @apply m-0 min-w-[260px] max-w-[min(320px,92vw)] p-0;
+    }
+    .leaflet-popup.home-map-leaflet-popup .leaflet-popup-content p {
+        @apply m-0;
     }
 
     /* cards & grids */
@@ -1123,26 +1192,47 @@
     @apply absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-slate-300;
   }
   .auth-modal-title {
-    @apply text-xl font-bold text-white;
+    @apply pr-10 text-xl font-bold text-white;
   }
   .auth-modal-lead {
     @apply mt-1 text-sm text-slate-400;
   }
+  .auth-modal-switch {
+    @apply ml-1 inline-flex text-sm font-semibold text-brand transition hover:text-orange-300;
+  }
   .auth-modal-form {
-    @apply mt-4 grid gap-2;
+    @apply mt-5 grid gap-4;
   }
   .auth-modal-label {
     @apply text-xs font-semibold text-slate-300;
   }
   .auth-modal-input {
-    @apply w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-slate-100 outline-none focus:border-brand;
+    @apply min-h-11 w-full rounded-lg border border-white/15 bg-slate-900/60 px-3.5 py-2.5 text-sm text-slate-100 shadow-none outline-none ring-0 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25;
+  }
+  select.auth-modal-input {
+    @apply cursor-pointer appearance-none bg-slate-900/60 bg-[length:1rem_1rem] bg-[position:right_.75rem_center] bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
   }
   .auth-modal-submit {
-    @apply mt-2 w-full;
+    @apply mt-6 min-h-11 w-full py-3 text-base font-semibold;
   }
   .auth-modal-error {
     @apply mt-3 rounded-lg border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm text-red-300;
   }
+  .auth-modal-form + .auth-modal-lead {
+    @apply mt-6 text-center text-sm text-slate-400;
+  }
+}
+
+/* Match dark modal when browsers autofill email/password */
+.auth-modal-input:-webkit-autofill,
+.auth-modal-input:-webkit-autofill:hover,
+.auth-modal-input:-webkit-autofill:focus,
+.auth-modal-input:-webkit-autofill:active {
+    -webkit-text-fill-color: rgb(241 245 249);
+    caret-color: rgb(241 245 249);
+    box-shadow: inset 0 0 0 100px rgb(15 23 42 / 0.92);
+    transition: background-color 99999s ease-out;
 }
 
 

@@ -2,8 +2,14 @@
   const state = {
     query: "",
     location: "",
-    category: "",
+    /** Normalized category keys; empty set = no category filter. Multiple = OR. */
+    categories: new Set(),
     showAll: false,
+  };
+  const categoryViewState = {
+    expanded: false,
+    /** Chips visible when collapsed (used for Mažiau (m)). */
+    collapsedVisible: 0,
   };
 
   const MAX_EVENT_SUGGESTIONS = 8;
@@ -15,14 +21,12 @@
     markersById: new Map(),
     lithuaniaBounds: null,
     ltMapTargets: [],
+    appBase: "",
   };
-  const categoryAliases = {
-    music: ["music", "muzika"],
-    arts: ["arts", "menas", "art"],
-    charity: ["charity", "labdara"],
-    business: ["business", "verslas"],
-    education: ["education", "svietimas", "sveitimas", "mokslas"],
-    food: ["food", "maistas", "gerimai", "maistas ir gerimai"],
+  const userGeoState = {
+    attempted: false,
+    lat: null,
+    lng: null,
   };
 
   function initHomeMap() {
@@ -33,7 +37,7 @@
     const toggleBtn = document.getElementById("homeEventsToggle");
     state.showAll = gridEl.dataset.startExpanded === "1";
 
-    const events = parseEvents(mapEl.dataset.events || "[]");
+    const events = parseEventsFromPage(mapEl);
     const cards = getCards(gridEl);
     const eventsById = new Map(events.map((event) => [String(event.id), event]));
 
@@ -47,8 +51,9 @@
     );
 
     decorateCards(cards, eventsById);
-    initLeafletMap(mapEl, events, ltMapTargets);
     const appBase = (heroEl?.dataset?.appBase ?? "").replace(/\/$/, "");
+    mapState.appBase = appBase;
+    initLeafletMap(mapEl, events, ltMapTargets);
 
     bindInputs(
       cards,
@@ -58,6 +63,7 @@
       searchIndex,
       ltPlaces,
       appBase,
+      mapEl,
     );
     applyFilters(cards, eventsById, initialVisible, toggleBtn);
   }
@@ -69,6 +75,21 @@
     } catch (_error) {
       return [];
     }
+  }
+
+  function parseEventsFromPage(mapEl) {
+    const embedded = document.getElementById("homeMapEventsData");
+    if (embedded && embedded.textContent.trim()) {
+      try {
+        const parsed = JSON.parse(embedded.textContent);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (_error) {
+        /* fall back */
+      }
+    }
+    return parseEvents(mapEl.dataset.events || "[]");
   }
 
   function parseSearchIndex(raw) {
@@ -253,6 +274,7 @@
     searchIndex,
     ltPlaces,
     appBase,
+    mapEl,
   ) {
     const searchInput = document.getElementById("searchInput");
     const locationInput = document.getElementById("locationInput");
@@ -261,12 +283,23 @@
     const categoryButtons = Array.from(
       document.querySelectorAll(".cat-btn[data-category], .category[data-category]"),
     );
+    initDynamicCategoryBar(mapEl, categoryButtons);
 
-    function commitFromInputs() {
+    function commitFromInputs(skipHeroActivation = false) {
       state.query = searchInput?.value.trim() || "";
       state.location = locationInput?.value.trim() || "";
       hideSuggestionLists();
+      if (
+        !skipHeroActivation &&
+        (state.query || state.location)
+      ) {
+        activateHeroSearchFocus();
+      }
       applyFilters(cards, eventsById, initialVisible, toggleBtn);
+    }
+
+    function activateHeroSearchFocus() {
+      document.querySelector(".hero")?.classList.add("hero--search-focused");
     }
 
     function hideSuggestionLists() {
@@ -413,11 +446,14 @@
     }
 
     if (searchInput) {
-      searchInput.addEventListener("focus", () => {
+      searchInput.addEventListener("input", () => {
         renderSearchSuggestions();
+        if (searchInput.value.trim() === "") {
+          commitFromInputs();
+        }
       });
 
-      searchInput.addEventListener("input", () => {
+      searchInput.addEventListener("focus", () => {
         renderSearchSuggestions();
       });
 
@@ -484,11 +520,12 @@
 
     categoryButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        const category = button.dataset.category || "";
-        if (state.category === category) {
-          state.category = "";
+        const cat = normalize(button.dataset.category || "");
+        if (!cat) return;
+        if (state.categories.has(cat)) {
+          state.categories.delete(cat);
         } else {
-          state.category = category;
+          state.categories.add(cat);
         }
 
         syncCategoryButtonState(categoryButtons);
@@ -510,7 +547,12 @@
 
     window.filterByCategory = (category) => {
       const normalized = normalize(category || "");
-      state.category = state.category === normalized ? "" : normalized;
+      if (!normalized) return;
+      if (state.categories.has(normalized)) {
+        state.categories.delete(normalized);
+      } else {
+        state.categories.add(normalized);
+      }
       syncCategoryButtonState(categoryButtons);
       applyFilters(cards, eventsById, initialVisible, toggleBtn);
     };
@@ -526,7 +568,7 @@
       requestUserCityAutofill(
         locationInput,
         ltPlaces,
-        commitFromInputs,
+        () => commitFromInputs(true),
         appBase,
       );
     }, 400);
@@ -534,15 +576,14 @@
 
   function syncCategoryButtonState(buttons) {
     buttons.forEach((button) => {
-      const category = button.dataset.category || "";
-      button.classList.toggle("is-active", state.category === category);
+      const cat = normalize(button.dataset.category || "");
+      button.classList.toggle("is-active", cat !== "" && state.categories.has(cat));
     });
   }
 
   function applyFilters(cards, eventsById, initialVisible, toggleBtn) {
     const query = normalize(state.query);
     const location = normalize(state.location);
-    const category = normalize(state.category);
 
     const matchedIds = new Set();
     let matchedCount = 0;
@@ -576,7 +617,11 @@
         haystackDistrict.includes(query) ||
         tagsMatch(query, tagsRaw);
       const matchesLocation = !location || haystackLocation.includes(location);
-      const matchesCategory = !category || categoryMatches(itemCategory, category);
+      const matchesCategory =
+        state.categories.size === 0 ||
+        [...state.categories].some((sel) =>
+          categoryMatches(itemCategory, sel),
+        );
       const matchesFilters = matchesQuery && matchesLocation && matchesCategory;
 
       let isVisible = false;
@@ -618,10 +663,10 @@
 
   function categoryMatches(itemCategory, selectedCategory) {
     if (!selectedCategory) return true;
+    if (!itemCategory) return false;
     if (itemCategory === selectedCategory) return true;
-
-    const aliases = categoryAliases[selectedCategory] || [selectedCategory];
-    return aliases.some((alias) => itemCategory.includes(normalize(alias)));
+    const categories = splitCategories(itemCategory);
+    return categories.includes(selectedCategory);
   }
 
   function getCardEventId(card) {
@@ -656,12 +701,19 @@
       }
 
       const marker = L.marker([event.lat, event.lng]);
-      marker.bindPopup(buildPopup(event));
-      marker.on("mouseover", function () {
-        this.openPopup();
+      marker.bindPopup(buildPopup(event), {
+        maxWidth: 320,
+        className: "home-map-leaflet-popup",
       });
-      marker.on("mouseout", function () {
-        this.closePopup();
+      marker.on("popupopen", function (e) {
+        const el = e.popup?.getElement?.();
+        const link = el?.querySelector?.(".home-map-popup-directions");
+        if (link) {
+          link.setAttribute(
+            "href",
+            buildRouteLink(Number(event.lat), Number(event.lng)),
+          );
+        }
       });
       mapState.markersById.set(String(event.id), marker);
     });
@@ -683,12 +735,39 @@
     const title = escapeHtml(event.title || "");
     const location = escapeHtml(event.location || "");
     const date = escapeHtml([event.date || "", event.time || ""].join(" ").trim());
+    const price = escapeHtml(event.price || "");
+    const image = escapeHtml(event.image || "");
+    const eventLat = Number(event.lat);
+    const eventLng = Number(event.lng);
+    const routeLink = buildRouteLink(eventLat, eventLng);
+    const detailsHref = `${mapState.appBase}/events/${encodeURIComponent(String(event.id || ""))}`;
+
+    const hasMedia = Boolean((event.image || "").trim() || (event.price || "").trim());
+    const mediaHtml = hasMedia
+      ? [
+          '<div class="home-map-popup-media">',
+          (event.image || "").trim()
+            ? `<img class="home-map-popup-image" src="${image}" alt="${title}">`
+            : '<div class="home-map-popup-image-placeholder" aria-hidden="true"></div>',
+          price
+            ? `<div class="event-price">${price}</div>`
+            : "",
+          "</div>",
+        ].join("")
+      : "";
 
     return [
       '<div class="home-map-popup">',
+      mediaHtml,
+      '<div class="home-map-popup-body">',
+      '<div class="home-map-popup-text-stack">',
       `<div class="home-map-popup-title">${title}</div>`,
       `<div class="home-map-popup-meta">${location}</div>`,
       `<div class="home-map-popup-meta">${date}</div>`,
+      `<a class="home-map-popup-link" href="${detailsHref}">Peržiūrėti renginį</a>`,
+      `<a class="home-map-popup-link home-map-popup-directions" target="_blank" rel="noopener noreferrer" href="${routeLink}">Gauti maršrutą per Google Maps</a>`,
+      "</div>",
+      "</div>",
       "</div>",
     ].join("");
   }
@@ -698,13 +777,50 @@
 
     mapState.markersLayer.clearLayers();
 
+    const visibleMarkers = [];
     mapState.markersById.forEach((marker, id) => {
       if (!visibleIds.has(id)) return;
       marker.addTo(mapState.markersLayer);
+      visibleMarkers.push(marker);
     });
 
     const loc = (state.location || "").trim();
     const bounds = mapState.lithuaniaBounds;
+    const query = normalize(state.query);
+
+    if (query && visibleMarkers.length > 0) {
+      const map = mapState.map;
+      if (visibleMarkers.length === 1) {
+        const marker = visibleMarkers[0];
+        map.flyTo(marker.getLatLng(), 15, {
+          animate: true,
+          duration: 0.45,
+        });
+        map.once("moveend", () => {
+          const dy = Math.round(map.getSize().y * 0.22);
+          map.panBy(L.point(0, -dy), { animate: true, duration: 0.35 });
+          map.once("moveend", () => {
+            marker.openPopup();
+          });
+        });
+      } else {
+        const resultBounds = L.featureGroup(visibleMarkers).getBounds();
+        if (resultBounds.isValid()) {
+          const h = map.getSize().y;
+          const extraTop = Math.round(h * 0.18);
+          map.fitBounds(resultBounds, {
+            paddingTopLeft: L.point(40, 40 + extraTop),
+            paddingBottomRight: L.point(40, 40),
+            maxZoom: 15,
+          });
+          map.once("moveend", () => {
+            const dy = Math.round(map.getSize().y * 0.14);
+            map.panBy(L.point(0, -dy), { animate: true, duration: 0.3 });
+          });
+        }
+      }
+      return;
+    }
 
     if (!normalize(loc)) {
       if (bounds && bounds.isValid()) {
@@ -731,6 +847,168 @@
     return String(value || "").trim().toLowerCase();
   }
 
+  function splitCategories(value) {
+    return String(value || "")
+      .split(",")
+      .map((part) => normalize(part))
+      .filter(Boolean);
+  }
+
+  function initDynamicCategoryBar(_mapEl, categoryButtons) {
+    const categoryBar = document.getElementById("homeCategoryBar");
+    const toggleButton = document.getElementById("homeCategoryToggle");
+    if (
+      !categoryBar ||
+      !toggleButton ||
+      !categoryBar.contains(toggleButton) ||
+      !categoryButtons.length
+    ) {
+      return;
+    }
+
+    const expandLimit = Number(categoryBar.dataset.expandLimit || 20);
+    const sortedButtons = [...categoryButtons].sort((a, b) => {
+      const ar = Number(a.dataset.categoryRank || 0);
+      const br = Number(b.dataset.categoryRank || 0);
+      return br - ar;
+    });
+
+    function categoryBarOverflows() {
+      return categoryBar.scrollWidth > categoryBar.clientWidth + 1;
+    }
+
+    function maxCollapsedVisible(total) {
+      toggleButton.hidden = true;
+      toggleButton.style.visibility = "";
+      sortedButtons.forEach((btn, i) => {
+        btn.hidden = i >= total;
+      });
+      void categoryBar.offsetHeight;
+
+      if (!categoryBarOverflows()) {
+        return total;
+      }
+
+      toggleButton.hidden = false;
+      toggleButton.style.visibility = "hidden";
+      toggleButton.textContent = `Daugiau (${Math.max(0, total - 1)})`;
+
+      let lo = 1;
+      let hi = total;
+      let best = 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        sortedButtons.forEach((btn, i) => {
+          btn.hidden = i >= mid;
+        });
+        void categoryBar.offsetHeight;
+        if (!categoryBarOverflows()) {
+          best = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+
+      toggleButton.style.visibility = "";
+      sortedButtons.forEach((btn, i) => {
+        btn.hidden = i >= best;
+      });
+      return best;
+    }
+
+    let resizeQueued = false;
+    function queueResizeApply() {
+      if (resizeQueued) {
+        return;
+      }
+      resizeQueued = true;
+      requestAnimationFrame(() => {
+        resizeQueued = false;
+        if (!categoryViewState.expanded) {
+          applyCategoryVisibility();
+        }
+      });
+    }
+
+    function applyCategoryVisibility() {
+      const total = Math.min(expandLimit, sortedButtons.length);
+
+      if (categoryViewState.expanded) {
+        categoryBar.classList.add("categories-content--expanded");
+        sortedButtons.forEach((btn, i) => {
+          btn.hidden = i >= total;
+        });
+        toggleButton.hidden = false;
+        toggleButton.style.visibility = "";
+        const m = Math.max(0, categoryViewState.collapsedVisible);
+        toggleButton.textContent = `Mažiau (${m})`;
+        toggleButton.setAttribute("aria-expanded", "true");
+        return;
+      }
+
+      categoryBar.classList.remove("categories-content--expanded");
+
+      const best = maxCollapsedVisible(total);
+      categoryViewState.collapsedVisible = best;
+
+      sortedButtons.forEach((btn, i) => {
+        btn.hidden = i >= best;
+      });
+
+      if (best >= total) {
+        toggleButton.hidden = true;
+        toggleButton.removeAttribute("aria-expanded");
+      } else {
+        toggleButton.hidden = false;
+        const n = Math.max(0, total - best);
+        toggleButton.textContent = `Daugiau (${n})`;
+        toggleButton.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    toggleButton.addEventListener("click", () => {
+      categoryViewState.expanded = !categoryViewState.expanded;
+      applyCategoryVisibility();
+    });
+
+    window.addEventListener("resize", queueResizeApply);
+    applyCategoryVisibility();
+  }
+
+  function requestUserGeoForDirections() {
+    if (userGeoState.attempted || !navigator.geolocation) {
+      return;
+    }
+    userGeoState.attempted = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userGeoState.lat = position.coords.latitude;
+        userGeoState.lng = position.coords.longitude;
+      },
+      () => {},
+      {
+        enableHighAccuracy: false,
+        timeout: 12000,
+        maximumAge: 600000,
+      },
+    );
+  }
+
+  function buildRouteLink(eventLat, eventLng) {
+    const destination = `${eventLat},${eventLng}`;
+    const hasUserLocation =
+      Number.isFinite(userGeoState.lat) && Number.isFinite(userGeoState.lng);
+    const params = new URLSearchParams();
+    params.set("api", "1");
+    params.set("destination", destination);
+    params.set("travelmode", "driving");
+    if (hasUserLocation) {
+      params.set("origin", `${userGeoState.lat},${userGeoState.lng}`);
+    }
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
   function tagsMatch(query, tagsRaw) {
     if (!query) return true;
     const raw = String(tagsRaw || "").trim();
@@ -753,4 +1031,5 @@
   } else {
     initHomeMap();
   }
+  requestUserGeoForDirections();
 })();
