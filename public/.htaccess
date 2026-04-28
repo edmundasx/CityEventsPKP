@@ -5,7 +5,8 @@ Options -Indexes
 
     # If your project is in a subfolder, keep this line. 
     # If it's at the root of your domain, you can comment it out.
-    RewriteBase /cityevents/public/
+    # Must match the URL path to this folder (see project folder name).
+    RewriteBase /CityEventsPKP/public/
 
     # Serve existing files or directories directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
