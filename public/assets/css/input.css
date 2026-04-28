@@ -154,7 +154,7 @@
     }
     .cat-btn,
     .category {
-        @apply flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left
+        @apply flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left font-inherit
                text-sm font-semibold leading-normal text-slate-800 hover:border-brand hover:text-brand transition;
     }
     .categories {

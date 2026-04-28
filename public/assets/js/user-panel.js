@@ -1,6 +1,6 @@
 ﻿(() => {
   function toFormBody(form) {
-    return new URLSearchParams(new FormDate(form)).toString();
+    return new URLSearchParams(new FormData(form)).toString();
   }
 
   async function postForm(form) {
