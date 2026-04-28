@@ -1805,6 +1805,9 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
+    "content-hash": "9a2b2a062985ff3320d8d458f55ca7a9",
+    "packages": [],
+    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {},

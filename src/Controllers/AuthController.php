@@ -72,15 +72,18 @@ final class AuthController
             return;
         }
 
+        // Perskaito userio role ir nukreipia ten kur jam priklauso pagal role
+        $redirect = $this->redirectForRole((string) (Auth::role() ?? "user"));
+
         if ($this->isAjaxRequest()) {
             $this->jsonResponse(200, [
                 "ok" => true,
-                "redirect" => $this->basePath() . "/",
+                "redirect" => $redirect,
             ]);
             return;
         }
 
-        header("Location: " . $this->basePath() . "/");
+        header("Location: " . $redirect);
     }
 
     public function register(): void
@@ -220,6 +223,11 @@ final class AuthController
 
     private function redirectForRole(string $role): string
     {
+        // Admins are routed to the admin panel so the admin-only navbar state is visible right away.
+        if ($role === "admin") {
+            return $this->basePath() . "/admin/panel";
+        }
+
         if ($role === "organizer") {
             return $this->basePath() . "/organizer/panel";
         }

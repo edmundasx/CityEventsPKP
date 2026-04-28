@@ -1,11 +1,17 @@
+Options -Indexes
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Serve existing files/directories directly.
+    # If your project is in a subfolder, keep this line. 
+    # If it's at the root of your domain, you can comment it out.
+    RewriteBase /cityevents/public/
+
+    # Serve existing files or directories directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Route everything else through front controller.
+    # Route all other requests through the front controller
     RewriteRule ^ index.php [L,QSA]
 </IfModule>
