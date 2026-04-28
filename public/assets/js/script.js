@@ -57,7 +57,10 @@
       const closeButtons = Array.from(config.modal.querySelectorAll("[data-auth-close]"));
 
       config.openButtons.forEach((button) => {
-        button.addEventListener("click", () => openModal(config));
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          openModal(config);
+        });
       });
 
       closeButtons.forEach((button) => {
@@ -88,9 +91,18 @@
             },
             body: body.toString(),
           });
+          // Some environments may return HTML redirect/page instead of JSON.
+          // Handle both response types so auth never appears "stuck".
+          const contentType = (response.headers.get("content-type") || "").toLowerCase();
+          const isJson = contentType.includes("application/json");
+          const data = isJson ? await response.json() : null;
 
-          const data = await response.json();
-          if (!response.ok || !data.ok) {
+          if (response.redirected && response.url) {
+            window.location.assign(response.url);
+            return;
+          }
+
+          if (isJson && (!response.ok || !data || !data.ok)) {
             const message = (data && data.message) || config.fallbackError;
             if (config.errorBox) {
               config.errorBox.textContent = message;
@@ -99,8 +111,22 @@
             return;
           }
 
-          const redirectUrl = data.redirect || window.location.href;
-          window.location.assign(redirectUrl);
+          if (isJson) {
+            const redirectUrl =
+              (data && data.redirect) || response.url || window.location.href;
+            window.location.assign(redirectUrl);
+            return;
+          }
+
+          if (response.ok && response.url) {
+            window.location.assign(response.url);
+            return;
+          }
+
+          if (config.errorBox) {
+            config.errorBox.textContent = config.fallbackError;
+            config.errorBox.classList.remove("hidden");
+          }
         } catch (_error) {
           if (config.errorBox) {
             config.errorBox.textContent = "Server error. Please try again.";

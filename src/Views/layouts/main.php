@@ -31,11 +31,13 @@ $_ceScriptVer = is_file($_ceScriptFs) ? (string) filemtime($_ceScriptFs) : "1";
 
 <?php require __DIR__ . "/../partials/header.php"; ?>
 
+<main>
 <?php
-if (isset($view) && is_file($view)) {
+if (isset($view) && is_string($view) && $view !== "" && file_exists($view)) {
     require $view;
 }
 ?>
+</main>
 
 <?php require __DIR__ . "/../partials/footer.php"; ?>
 <?php if ($enableLoginModal): ?>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $base = $base ?? "";
 $container = "container-ce";
 $homeMapEvents = $homeMapEvents ?? [];
