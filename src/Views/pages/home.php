@@ -33,16 +33,33 @@ $e = static fn($value) => htmlspecialchars(
     class="home-hero-map-bg"
     data-events="<?= $e($homeMapJson) ?>"
   ></div>
+  <?php
+  $homeMapJsonInline = json_encode(
+      $homeMapEvents,
+      JSON_UNESCAPED_UNICODE |
+          JSON_UNESCAPED_SLASHES |
+          JSON_HEX_TAG |
+          JSON_HEX_APOS |
+          JSON_HEX_QUOT |
+          JSON_HEX_AMP,
+  );
+  if ($homeMapJsonInline === false) {
+      $homeMapJsonInline = "[]";
+  }
+  ?>
+  <script type="application/json" id="homeMapEventsData"><?= $homeMapJsonInline ?></script>
   <div class="hero-glow"></div>
 
   <div class="hero-inner">
     <div class="<?= $container ?> w-full">
       <div class="hero-content">
-        <h1 class="hero-title">Discover events for everything you love</h1>
+        <div class="hero-discover">
+          <h1 class="hero-title">Discover events for everything you love</h1>
 
-        <p class="hero-lead">
-          Find and join events, connect with organizers, or create your own event
-        </p>
+          <p class="hero-lead">
+            Find and join events, connect with organizers, or create your own event
+          </p>
+        </div>
 
         <div class="search-wrap">
           <div class="search-bar">
@@ -94,28 +111,30 @@ $e = static fn($value) => htmlspecialchars(
 </section>
 
 <section class="<?= $container ?> section-pad categories">
-  <div class="categories-content">
-    <?php
-    $cats = [
-        ["music", "&#127925;", "Music"],
-        ["arts", "&#127912;", "Art"],
-        ["charity", "&#10084;&#65039;", "Charity"],
-        ["business", "&#128188;", "Business"],
-        ["education", "&#128218;", "Education"],
-        ["food", "&#127869;&#65039;", "Food & Drinks"],
-    ];
-    foreach ($cats as [$key, $icon, $label]): ?>
-      <div
+  <div
+    id="homeCategoryBar"
+    class="categories-content"
+    data-expand-limit="20"
+  >
+    <?php foreach (($categoryPopularity ?? []) as $cat): ?>
+      <button
+        type="button"
         class="category"
-        role="button"
-        tabindex="0"
-        data-category="<?= $e($key) ?>"
+        data-category="<?= $e((string) ($cat["key"] ?? "")) ?>"
+        data-category-rank="<?= $e((string) ($cat["count"] ?? 0)) ?>"
       >
-        <span class="category-icon"><?= $icon ?></span>
-        <span class="category-label"><?= $label ?></span>
-      </div>
-    <?php endforeach;
-    ?>
+        <span class="category-label"><?= $e((string) ($cat["label"] ?? "")) ?></span>
+      </button>
+    <?php endforeach; ?>
+    <button
+      id="homeCategoryToggle"
+      type="button"
+      class="category shrink-0"
+      hidden
+      aria-expanded="false"
+    >
+      Daugiau
+    </button>
   </div>
 </section>
 

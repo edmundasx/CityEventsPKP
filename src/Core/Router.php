@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Support\AppBasePath;
+
 final class Router
 {
     /** @var array<int, array{method:string, regex:string, params:array<int,string>, handler:mixed, path:string, middlewares:array}> */
@@ -21,16 +23,7 @@ final class Router
             return;
         }
 
-        // Auto-detect from SCRIPT_NAME, e.g. /cityevents/public/index.php -> /cityevents/public
-        $detected = rtrim(
-            str_replace(
-                "\\",
-                "/",
-                (string) dirname($_SERVER["SCRIPT_NAME"] ?? ""),
-            ),
-            "/",
-        );
-        $this->basePath = $detected === "/" ? "" : $detected;
+        $this->basePath = AppBasePath::fromServer();
     }
 
     public function setBasePath(string $basePath): void

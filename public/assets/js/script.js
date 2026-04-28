@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   if (window.__authModalInit) {
     return;
   }
@@ -46,7 +46,7 @@
 
       if (config.errorBox) {
         config.errorBox.textContent = "";
-        config.errorBox.classList.add("hidden");
+        config.errorBox.hidden = true;
       }
       if (config.focusInput) {
         config.focusInput.focus();
@@ -78,7 +78,7 @@
 
         if (config.errorBox) {
           config.errorBox.textContent = "";
-          config.errorBox.classList.add("hidden");
+          config.errorBox.hidden = true;
         }
 
         try {
@@ -106,7 +106,7 @@
             const message = (data && data.message) || config.fallbackError;
             if (config.errorBox) {
               config.errorBox.textContent = message;
-              config.errorBox.classList.remove("hidden");
+              config.errorBox.hidden = false;
             }
             return;
           }
@@ -130,7 +130,7 @@
         } catch (_error) {
           if (config.errorBox) {
             config.errorBox.textContent = "Server error. Please try again.";
-            config.errorBox.classList.remove("hidden");
+            config.errorBox.hidden = false;
           }
         }
       });

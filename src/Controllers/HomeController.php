@@ -5,16 +5,14 @@ namespace App\Controllers;
 
 use App\Core\Db;
 use App\Repositories\EventRepository;
+use App\Support\AppBasePath;
 use App\Support\LithuaniaPlaces;
 
 final class HomeController
 {
     public function index(): void
     {
-        $base = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? ""), "/");
-        if ($base === "" || $base === "." || $base === "/") {
-            $base = "";
-        }
+        $base = AppBasePath::fromServer();
 
         // Layout expects these variables
         $title = "Home";
@@ -37,6 +35,9 @@ final class HomeController
             $event["district"] = (string) ($map["district"] ?? "");
             $event["lat"] = isset($map["lat"]) ? (float) $map["lat"] : null;
             $event["lng"] = isset($map["lng"]) ? (float) $map["lng"] : null;
+            if (trim((string) ($event["image"] ?? "")) === "" && $map !== null) {
+                $event["image"] = (string) ($map["cover_image"] ?? "");
+            }
         }
         unset($event);
 
@@ -47,6 +48,8 @@ final class HomeController
                 "location" => (string) ($event["location"] ?? ""),
                 "date" => (string) ($event["date"] ?? ""),
                 "time" => (string) ($event["time"] ?? ""),
+                "price" => (string) ($event["price"] ?? ""),
+                "image" => (string) ($event["image"] ?? ""),
                 "category" => (string) ($event["category"] ?? ""),
                 "district" => (string) ($event["district"] ?? ""),
                 "organizer_name" => (string) ($event["organizer_name"] ?? ""),
@@ -92,12 +95,48 @@ final class HomeController
             $ltMapTargetsJson = "[]";
         }
 
+        $categoryPopularity = [];
+        foreach ($homeMapEvents as $event) {
+            $rawCategory = (string) ($event["category"] ?? "");
+            if ($rawCategory === "") {
+                continue;
+            }
+            $parts = preg_split("/\s*,\s*/u", $rawCategory) ?: [];
+            foreach ($parts as $part) {
+                $label = trim((string) $part);
+                if ($label === "") {
+                    continue;
+                }
+                $key = mb_strtolower($label, "UTF-8");
+                if (!isset($categoryPopularity[$key])) {
+                    $categoryPopularity[$key] = [
+                        "key" => $key,
+                        "label" => $label,
+                        "count" => 0,
+                    ];
+                }
+                $categoryPopularity[$key]["count"]++;
+            }
+        }
+        usort($categoryPopularity, static function (array $a, array $b): int {
+            if (($a["count"] ?? 0) === ($b["count"] ?? 0)) {
+                return strcmp((string) ($a["label"] ?? ""), (string) ($b["label"] ?? ""));
+            }
+            return ($b["count"] ?? 0) <=> ($a["count"] ?? 0);
+        });
+
+        $categoryPopularity = array_slice(array_values($categoryPopularity), 0, 20);
+
+        $publicRoot = dirname(__DIR__, 2) . "/public";
+        $homeMapJsPath = $publicRoot . "/assets/js/home-map.js";
+        $homeMapJsVer = is_file($homeMapJsPath) ? (string) filemtime($homeMapJsPath) : "1";
+
         $pageStyles = [
             "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
         ];
         $pageScripts = [
             "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
-            $base . "/assets/js/home-map.js",
+            $base . "/assets/js/home-map.js?v=" . $homeMapJsVer,
         ];
 
         require __DIR__ . "/../Views/layouts/main.php";

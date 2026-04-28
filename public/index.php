@@ -32,12 +32,7 @@ try {
 
     $router = new \App\Core\Router();
 
-    // XAMPP subfolder base path (auto-detect, no hardcode)
-    $base = rtrim(
-        str_replace("\\", "/", dirname($_SERVER["SCRIPT_NAME"] ?? "")),
-        "/",
-    ); // /cityevents/public
-    $router->setBasePath($base === "/" ? "" : $base);
+    $router->setBasePath(\App\Support\AppBasePath::fromServer());
 
     $register = require __DIR__ . "/../routes/web.php";
     if (!is_callable($register)) {
