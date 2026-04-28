@@ -29,12 +29,27 @@ function assertSame(mixed $expected, mixed $actual, string $message): void
 function adminTestConfig(): array
 {
     return [
-        'host' => getenv('CITYEVENTS_TEST_DB_HOST') ?: '127.0.0.1',
+        'host' => getenv('CITYEVENTS_TEST_DB_HOST') ?: getenv('DB_HOST') ?: '127.0.0.1',
         'port' => (int) (getenv('CITYEVENTS_TEST_DB_PORT') ?: '3306'),
         'database' => getenv('CITYEVENTS_TEST_DB_NAME') ?: 'cityevents_admin_panel_test',
-        'user' => getenv('CITYEVENTS_TEST_DB_USER') ?: 'root',
-        'password' => getenv('CITYEVENTS_TEST_DB_PASSWORD') ?: '',
+        'user' => getenv('CITYEVENTS_TEST_DB_USER') ?: getenv('DB_USER') ?: 'root',
+        'password' => adminTestDbPassword(),
     ];
+}
+
+/**
+ * Match CI/local flexibility: php_tests.yml sets DB_*; test.yml sets CITYEVENTS_TEST_*.
+ * Db.php uses DB_PASS; use the same fallback so getenv quirks do not yield an empty password.
+ */
+function adminTestDbPassword(): string
+{
+    if (getenv('CITYEVENTS_TEST_DB_PASSWORD') !== false) {
+        return (string) getenv('CITYEVENTS_TEST_DB_PASSWORD');
+    }
+    if (getenv('DB_PASS') !== false) {
+        return (string) getenv('DB_PASS');
+    }
+    return '';
 }
 
 function adminTestBootstrapDatabase(): PDO
