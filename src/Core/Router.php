@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Support\AppBasePath;
+
 final class Router
 {
     /** @var array<int, array{method:string, regex:string, params:array<int,string>, handler:mixed, path:string, middlewares:array}> */
@@ -21,16 +23,7 @@ final class Router
             return;
         }
 
-        // Auto-detect from SCRIPT_NAME, e.g. /cityevents/public/index.php -> /cityevents/public
-        $detected = rtrim(
-            str_replace(
-                "\\",
-                "/",
-                (string) dirname($_SERVER["SCRIPT_NAME"] ?? ""),
-            ),
-            "/",
-        );
-        $this->basePath = $detected === "/" ? "" : $detected;
+        $this->basePath = AppBasePath::fromServer();
     }
 
     public function setBasePath(string $basePath): void
@@ -129,12 +122,18 @@ final class Router
     {
         $path = parse_url($uri, PHP_URL_PATH) ?? "/";
 
-        // strip basePath (e.g. /cityevents/public)
-        if ($this->basePath !== "" && str_starts_with($path, $this->basePath)) {
+        // Strip basePath (e.g. /cityevents/public).
+        // Use case-insensitive match to avoid 404s when URL casing differs.
+        if (
+            $this->basePath !== "" &&
+            stripos($path, $this->basePath) === 0
+        ) {
             $path = substr($path, strlen($this->basePath));
-            if ($path === "") {
-                $path = "/";
-            }
+        }
+
+        // Also strip index.php if it's explicitly in the URL
+        if (str_starts_with($path, "/index.php")) {
+            $path = substr($path, 10);
         }
 
         // normalize
@@ -285,7 +284,8 @@ final class Router
     /**
      * Avoids fatal "too many arguments" by checking arity:
      *  - 0 params -> call with ()
-     *  - 1 param  -> pass associative array of params
+     *  - 1 param typed array -> pass associative array of route params
+     *  - 1 param otherwise -> pass single route value (e.g. /events/{id})
      *  - 2+       -> pass positional params
      */
     private function callSmart(
@@ -306,7 +306,18 @@ final class Router
             }
 
             if ($n === 1) {
-                call_user_func($cb, $assocArgs);
+                $param = $ref->getParameters()[0];
+                if ($this->reflectionParamAcceptsArray($param)) {
+                    call_user_func($cb, $assocArgs);
+                    return;
+                }
+
+                $value = $positionalArgs[0] ?? reset($assocArgs);
+                call_user_func(
+                    $cb,
+                    $this->castRouteValueForParameter($param, $value),
+                );
+
                 return;
             }
 
@@ -315,6 +326,58 @@ final class Router
             // fallback: try positional
             call_user_func_array($cb, $positionalArgs);
         }
+    }
+
+    private function reflectionParamAcceptsArray(\ReflectionParameter $param): bool
+    {
+        $type = $param->getType();
+        if ($type === null) {
+            return false;
+        }
+        if ($type instanceof \ReflectionNamedType) {
+            return $type->getName() === "array";
+        }
+        if ($type instanceof \ReflectionUnionType) {
+            foreach ($type->getTypes() as $u) {
+                if ($u instanceof \ReflectionNamedType && $u->getName() === "array") {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    private function castRouteValueForParameter(
+        \ReflectionParameter $param,
+        $value,
+    ) {
+        $type = $param->getType();
+        if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
+            if ($type instanceof \ReflectionNamedType) {
+                $name = $type->getName();
+                if ($name === "int") {
+                    return (int) $value;
+                }
+                if ($name === "float") {
+                    return (float) $value;
+                }
+                if ($name === "string") {
+                    return (string) $value;
+                }
+                if ($name === "bool") {
+                    return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+
+            return $value;
+        }
+
+        return $value;
     }
 
     private function runMiddlewares(array $middlewares, array $assocArgs): bool

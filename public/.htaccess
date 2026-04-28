@@ -1,12 +1,17 @@
 Options -Indexes
-RewriteEngine On
 
-RewriteBase /cityevents/public/
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-# Serve real files/folders directly
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+    # If your project is in a subfolder, keep this line. 
+    # If it's at the root of your domain, you can comment it out.
+    RewriteBase /cityevents/public/
 
-# Everything else -> /public/index.php
-RewriteRule ^ index.php [L,QSA]
+    # Serve existing files or directories directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all other requests through the front controller
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>

@@ -29,12 +29,27 @@ function assertSame(mixed $expected, mixed $actual, string $message): void
 function adminTestConfig(): array
 {
     return [
-        'host' => getenv('CITYEVENTS_TEST_DB_HOST') ?: '127.0.0.1',
+        'host' => getenv('CITYEVENTS_TEST_DB_HOST') ?: getenv('DB_HOST') ?: '127.0.0.1',
         'port' => (int) (getenv('CITYEVENTS_TEST_DB_PORT') ?: '3306'),
         'database' => getenv('CITYEVENTS_TEST_DB_NAME') ?: 'cityevents_admin_panel_test',
-        'user' => getenv('CITYEVENTS_TEST_DB_USER') ?: 'root',
-        'password' => getenv('CITYEVENTS_TEST_DB_PASSWORD') ?: '',
+        'user' => getenv('CITYEVENTS_TEST_DB_USER') ?: getenv('DB_USER') ?: 'root',
+        'password' => adminTestDbPassword(),
     ];
+}
+
+/**
+ * Match CI/local flexibility: php_tests.yml sets DB_*; test.yml sets CITYEVENTS_TEST_*.
+ * Db.php uses DB_PASS; use the same fallback so getenv quirks do not yield an empty password.
+ */
+function adminTestDbPassword(): string
+{
+    if (getenv('CITYEVENTS_TEST_DB_PASSWORD') !== false) {
+        return (string) getenv('CITYEVENTS_TEST_DB_PASSWORD');
+    }
+    if (getenv('DB_PASS') !== false) {
+        return (string) getenv('DB_PASS');
+    }
+    return '';
 }
 
 function adminTestBootstrapDatabase(): PDO
@@ -105,10 +120,16 @@ function adminTestBootstrapDatabase(): PDO
             id INT AUTO_INCREMENT PRIMARY KEY,
             organizer_id INT NULL,
             title VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            category VARCHAR(255) NOT NULL,
             location VARCHAR(255) NOT NULL DEFAULT '',
+            lat DECIMAL(10,6) NULL,
+            lng DECIMAL(10,6) NULL,
             event_date DATETIME NOT NULL,
+            price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             status VARCHAR(50) NOT NULL DEFAULT 'pending',
             rejection_reason TEXT NULL,
+            cover_image TEXT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                 ON UPDATE CURRENT_TIMESTAMP,
@@ -142,8 +163,11 @@ function adminTestBootstrapDatabase(): PDO
             id,
             organizer_id,
             title,
+            description,
+            category,
             location,
             event_date,
+            price,
             status,
             rejection_reason,
             created_at,
@@ -153,8 +177,11 @@ function adminTestBootstrapDatabase(): PDO
             :id,
             :organizer_id,
             :title,
+            :description,
+            :category,
             :location,
             :event_date,
+            :price,
             :status,
             :rejection_reason,
             NOW(),
@@ -166,8 +193,11 @@ function adminTestBootstrapDatabase(): PDO
         ':id' => 101,
         ':organizer_id' => 2,
         ':title' => 'Pending admin review event',
+        ':description' => 'Fixture for admin panel integration tests.',
+        ':category' => 'Test',
         ':location' => 'Vilnius',
         ':event_date' => '2026-05-01 18:00:00',
+        ':price' => 0.0,
         ':status' => 'pending',
         ':rejection_reason' => null,
     ]);

@@ -34,11 +34,23 @@
     .hero {
         @apply relative overflow-hidden bg-brand text-white min-h-[34rem];
     }
+    /* Full-width overlay so the hit target is not a narrow column (same width as content grid). */
     .hero-inner {
-        @apply relative z-10 flex min-h-[34rem] items-center justify-center py-14;
+        @apply absolute inset-0 z-10 flex items-center justify-center py-14 pointer-events-none;
+    }
+
+    /* Prevent flex re-center from cancelling translateY when headline collapses during search */
+    .hero.hero--search-focused .hero-inner {
+        @apply items-start justify-center;
+        padding-top: min(14vh, 6rem);
+        padding-bottom: calc(var(--spacing) * 10);
+    }
+    /* Children default to pointer-events: auto — without this, the full-width inner wrapper blocks the map. */
+    .hero-inner > .container-ce {
+        pointer-events: none;
     }
     .hero-content {
-        @apply mx-auto max-w-2xl text-center;
+        @apply mx-auto max-w-2xl text-center pointer-events-none;
     }
     .hero-title {
         @apply text-3xl font-extrabold leading-tight md:text-5xl;
@@ -47,8 +59,29 @@
         @apply mt-4 text-white/90 md:text-lg;
     }
 
+    .hero-discover {
+        @apply overflow-hidden opacity-100 transition-[opacity,max-height,margin,padding] duration-300 ease-out;
+        max-height: 14rem;
+    }
+
+    .hero.hero--search-focused .hero-discover {
+        max-height: 0;
+        margin: 0;
+        padding: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hero-discover,
+        .search-wrap {
+            transition-duration: 0.01ms;
+        }
+    }
+
     .home-hero-map-bg {
         @apply absolute inset-0 z-0 h-full w-full;
+        pointer-events: auto;
     }
     .home-hero-map-bg .leaflet-control-container {
         @apply opacity-90;
@@ -59,29 +92,73 @@
         @apply absolute inset-0 z-[1] opacity-35 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.12),rgba(0,0,0,0.58)_68%)];
     }
 
-    /* search */
+    /* search: outer wrap passes clicks to map; bar + fields use pointer-events auto */
     .search-wrap {
-        @apply mx-auto mt-8 max-w-3xl;
+        @apply mx-auto mt-8 max-w-3xl pointer-events-none;
+        transform: translateY(0);
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .hero.hero--search-focused .search-wrap {
+        transform: translateY(calc(min(28vh, 12rem) * 1.5));
     }
     .search-bar {
-        @apply flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+        @apply pointer-events-auto flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur md:flex-row;
+    }
+    .search-field-wrap {
+        @apply relative z-[75] min-w-0 flex-1;
     }
     .search-input {
         @apply w-full rounded-xl bg-white/90 px-4 py-3 text-slate-900 placeholder:text-slate-500
                outline-none ring-0 focus:ring-4 focus:ring-white/30;
     }
+    /* Native clear (×): large tap target; icon stays ~1rem via background-size */
+    #searchInput.search-input::-webkit-search-cancel-button,
+    #locationInput.search-input::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+        width: 3rem;
+        height: 3rem;
+        margin-inline-end: 0;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2364748b' d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 1rem 1rem;
+    }
     .search-btn {
         @apply w-full md:w-auto rounded-xl bg-white px-5 py-3 font-bold text-brand hover:bg-white/90 transition;
     }
+    .search-dropdown {
+        @apply absolute left-0 right-0 top-full z-[90] -mt-2 flex max-h-60 flex-col overflow-y-auto rounded-b-xl border border-slate-200 border-t-0
+               bg-white py-2 text-left text-sm text-slate-800 shadow-2xl;
+        opacity: 1;
+    }
+    .search-dropdown li {
+        @apply cursor-pointer px-3 py-2 hover:bg-slate-100;
+    }
+    .search-suggest-title {
+        @apply block font-medium;
+    }
+    .search-suggest-sub {
+        @apply mt-0.5 block text-xs text-slate-500;
+    }
     /* categories */
-    .cats-grid,
-    .categories-content {
+    .cats-grid {
         @apply grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6;
+    }
+    .categories-content {
+        @apply flex min-h-0 w-full min-w-0 flex-nowrap gap-3 overflow-hidden;
+    }
+    .categories-content--expanded {
+        @apply flex-wrap items-start overflow-visible;
     }
     .cat-btn,
     .category {
         @apply flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left
-               font-semibold text-slate-800 hover:border-brand hover:text-brand transition;
+               text-sm font-semibold leading-normal text-slate-800 hover:border-brand hover:text-brand transition;
+    }
+    .categories {
+        @apply space-y-3;
     }
     .category {
         @apply cursor-pointer select-none;
@@ -92,20 +169,48 @@
     }
     .cat-label,
     .category-label {
-        @apply text-sm;
+        @apply whitespace-nowrap text-sm;
     }
     .cat-btn.is-active,
     .category.is-active {
         @apply border-brand bg-brand text-white;
     }
     .home-map-popup-title {
-        @apply font-semibold text-slate-900;
+        @apply text-xs font-semibold leading-relaxed text-slate-900;
     }
     .home-map-popup-meta {
-        @apply text-xs text-slate-600;
+        @apply text-xs leading-relaxed text-slate-600;
+    }
+    .home-map-popup-text-stack {
+        @apply flex flex-col gap-1;
+    }
+    .home-map-popup {
+        @apply overflow-hidden;
+    }
+    .home-map-popup-body {
+        @apply px-4 pb-4 pt-3;
+    }
+    .home-map-popup-media {
+        @apply relative mb-0 h-24 w-full overflow-hidden rounded-none bg-slate-200;
+    }
+    .home-map-popup-image {
+        @apply h-full w-full object-cover;
+    }
+    .home-map-popup-image-placeholder {
+        @apply h-full w-full bg-slate-200;
     }
     .home-map-popup-link {
-        @apply mt-2 inline-block text-xs font-semibold text-brand;
+        @apply block text-xs font-normal leading-relaxed text-slate-600 underline decoration-slate-400 underline-offset-2 transition hover:text-brand hover:decoration-brand;
+    }
+
+    .leaflet-popup.home-map-leaflet-popup .leaflet-popup-content-wrapper {
+        @apply p-0 overflow-hidden rounded-xl;
+    }
+    .leaflet-popup.home-map-leaflet-popup .leaflet-popup-content {
+        @apply m-0 min-w-[260px] max-w-[min(320px,92vw)] p-0;
+    }
+    .leaflet-popup.home-map-leaflet-popup .leaflet-popup-content p {
+        @apply m-0;
     }
 
     /* cards & grids */
@@ -190,6 +295,9 @@
     .event-title {
         @apply text-base font-semibold text-slate-900;
     }
+    .event-category {
+        @apply mt-1 inline-block max-w-full rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600;
+    }
     .event-price {
         @apply absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow;
     }
@@ -203,7 +311,7 @@
         @apply text-slate-500;
     }
     .events-empty {
-        @apply rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500;
+        @apply col-span-full w-full min-h-40 flex items-center justify-center rounded-2xl bg-transparent p-6 text-center text-sm text-slate-500;
     }
     .event-image--placeholder {
         @apply h-full w-full bg-slate-200;
@@ -215,96 +323,6 @@
 
     .footer-container {
         @apply max-w-[1200px] mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-2;
-    }
-
-    /* event details page */
-    .event-page {
-        @apply bg-[#090a0d] text-slate-200 py-8 pb-16;
-    }
-    .event-page-inner {
-        @apply mx-auto max-w-6xl px-4;
-    }
-    .event-breadcrumbs {
-        @apply text-xs text-slate-400;
-    }
-    .event-breadcrumbs-list {
-        @apply flex flex-wrap items-center gap-2;
-    }
-    .event-breadcrumb-link {
-        @apply transition hover:text-orange-400;
-    }
-    .event-breadcrumb-separator {
-        @apply text-slate-600;
-    }
-    .event-breadcrumb-current {
-        @apply text-slate-300;
-    }
-    .event-hero-shell {
-        @apply mt-4 overflow-hidden rounded-xl border border-white/10;
-    }
-    .event-hero-image,
-    .event-hero-placeholder {
-        @apply h-[420px] w-full bg-slate-800 object-cover;
-    }
-    .event-content-grid {
-        @apply mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px];
-    }
-    .event-main-column {
-        @apply flex flex-col gap-6;
-    }
-    .event-category-tag {
-        @apply inline-flex rounded-full bg-orange-500/15 px-3 py-1 text-xs lowercase text-orange-300;
-    }
-    .event-page-title {
-        @apply mt-4 text-4xl font-bold leading-tight text-white;
-    }
-    .event-card-block {
-        @apply rounded-xl border border-white/15 bg-[#0d1016] p-6;
-    }
-    .event-card-title {
-        @apply text-3xl font-semibold text-white;
-    }
-    .event-description {
-        @apply mt-4 leading-8 text-slate-300;
-    }
-    .event-info-list {
-        @apply mt-4 grid gap-3 text-slate-200;
-    }
-    .event-info-label {
-        @apply mr-1 font-semibold text-white;
-    }
-    .event-bullet-list {
-        @apply mt-4 grid list-disc gap-2 pl-5 text-slate-300;
-    }
-    .event-organizer-card {
-        @apply mt-4 flex items-center gap-3 rounded-lg bg-white/10 p-4;
-    }
-    .event-organizer-avatar {
-        @apply flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 font-bold text-white;
-    }
-    .event-organizer-name {
-        @apply font-semibold text-white;
-    }
-    .event-organizer-status {
-        @apply text-xs text-slate-400;
-    }
-    .event-sidebar {
-        @apply lg:pt-20;
-    }
-    .event-sidebar-card {
-        @apply rounded-xl border border-white/15 bg-[#0d1016] p-6;
-    }
-    .event-sidebar-price {
-        @apply text-4xl font-bold text-orange-500;
-    }
-    .event-ticket-button {
-        @apply mt-4 inline-flex w-full items-center justify-center rounded-lg bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-400;
-    }
-    .event-favorite-button {
-        @apply mt-2 w-full rounded-lg border border-white/20 bg-transparent px-4 py-3 font-semibold text-white transition hover:border-orange-500;
-    }
-    .event-ticket-meta {
-        @apply mt-3 text-center text-xs text-slate-400;
     }
 
     /* map page */
@@ -1174,24 +1192,57 @@
     @apply absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-slate-300;
   }
   .auth-modal-title {
-    @apply text-xl font-bold text-white;
+    @apply pr-10 text-xl font-bold text-white;
   }
   .auth-modal-lead {
     @apply mt-1 text-sm text-slate-400;
   }
+  .auth-modal-switch {
+    @apply ml-1 inline-flex text-sm font-semibold text-brand transition hover:text-orange-300;
+  }
   .auth-modal-form {
-    @apply mt-4 grid gap-2;
+    @apply mt-5 grid gap-4;
   }
   .auth-modal-label {
     @apply text-xs font-semibold text-slate-300;
   }
   .auth-modal-input {
-    @apply w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-slate-100 outline-none focus:border-brand;
+    @apply min-h-11 w-full rounded-lg border border-white/15 bg-slate-900/60 px-3.5 py-2.5 text-sm text-slate-100 shadow-none outline-none ring-0 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25;
+  }
+  select.auth-modal-input {
+    @apply cursor-pointer appearance-none bg-slate-900/60 bg-[length:1rem_1rem] bg-[position:right_.75rem_center] bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
   }
   .auth-modal-submit {
-    @apply mt-2 w-full;
+    @apply mt-6 min-h-11 w-full py-3 text-base font-semibold;
   }
   .auth-modal-error {
     @apply mt-3 rounded-lg border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm text-red-300;
   }
+  .auth-modal-form + .auth-modal-lead {
+    @apply mt-6 text-center text-sm text-slate-400;
+  }
 }
+
+/* Match dark modal when browsers autofill email/password */
+.auth-modal-input:-webkit-autofill,
+.auth-modal-input:-webkit-autofill:hover,
+.auth-modal-input:-webkit-autofill:focus,
+.auth-modal-input:-webkit-autofill:active {
+    -webkit-text-fill-color: rgb(241 245 249);
+    caret-color: rgb(241 245 249);
+    box-shadow: inset 0 0 0 100px rgb(15 23 42 / 0.92);
+    transition: background-color 99999s ease-out;
+}
+
+
+/* TEST OVERRIDE: only map + selected search controls accept pointer input */
+.hero, .hero * { pointer-events: none !important; }
+#homeHeroMap, #homeHeroMap * { pointer-events: auto !important; }
+#searchInput,
+#locationInput,
+.search-btn,
+.search-bar,
+.search-field-wrap,
+.search-dropdown,
+.search-dropdown * { pointer-events: auto !important; }

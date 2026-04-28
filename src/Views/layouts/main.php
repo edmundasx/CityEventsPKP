@@ -1,8 +1,16 @@
-﻿<?php
+<?php
 use App\Auth\Auth;
-$base = "/cityevents/public";
+use App\Support\AppBasePath;
+
+$base = $base ?? AppBasePath::fromServer();
 $enableLoginModal = (bool) ($enableLoginModal ?? true);
 $enableLoginModal = $enableLoginModal && !Auth::check();
+
+$projectRoot = dirname(__DIR__, 3);
+$_ceTailwindFs = $projectRoot . "/public/assets/css/tailwind.css";
+$_ceTailwindVer = is_file($_ceTailwindFs) ? (string) filemtime($_ceTailwindFs) : "1";
+$_ceScriptFs = $projectRoot . "/public/assets/js/script.js";
+$_ceScriptVer = is_file($_ceScriptFs) ? (string) filemtime($_ceScriptFs) : "1";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,7 +20,7 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
   <title><?= $title ??
       "City Events - Discover events you love" ?></title>
   <meta name="description" content="Find and join events, browse organizers, or create your own event.">
-  <link rel="stylesheet" href="<?= $base ?>/assets/css/tailwind.css">
+  <link rel="stylesheet" href="<?= htmlspecialchars($base, ENT_QUOTES, "UTF-8") ?>/assets/css/tailwind.css?v=<?= htmlspecialchars($_ceTailwindVer, ENT_QUOTES, "UTF-8") ?>">
   <?php if (!empty($pageStyles) && is_array($pageStyles)): ?>
     <?php foreach ($pageStyles as $style): ?>
       <link rel="stylesheet" href="<?= htmlspecialchars($style) ?>">
@@ -23,16 +31,24 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
 
 <?php require __DIR__ . "/../partials/header.php"; ?>
 
+<main>
+<?php
+if (isset($view) && is_string($view) && $view !== "" && file_exists($view)) {
+    require $view;
+}
+?>
+</main>
+
 <?php require __DIR__ . "/../partials/footer.php"; ?>
 <?php if ($enableLoginModal): ?>
   <div class="auth-modal hidden" id="loginModal" aria-hidden="true">
     <div class="auth-modal-backdrop" data-auth-close></div>
     <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
-      <button type="button" class="auth-modal-close" data-auth-close aria-label="Close">x</button>
+      <button type="button" class="auth-modal-close" data-auth-close aria-label="Close">&times;</button>
       <h2 id="loginModalTitle" class="auth-modal-title">Log in</h2>
       <p class="auth-modal-lead">Sign in to your CityEvents account.</p>
 
-      <div class="auth-modal-error hidden" id="loginModalError"></div>
+      <div class="auth-modal-error" id="loginModalError" hidden></div>
 
       <form id="loginModalForm" class="auth-modal-form" method="post" action="<?= $base ?>/login">
         <label class="auth-modal-label" for="loginModalEmail">Email</label>
@@ -46,7 +62,7 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
 
       <p class="auth-modal-lead">
         Don't have an account?
-        <button type="button" class="btn-outline js-switch-to-register">Sign up</button>
+        <button type="button" class="auth-modal-switch js-switch-to-register">Sign up</button>
       </p>
     </div>
   </div>
@@ -54,11 +70,11 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
   <div class="auth-modal hidden" id="registerModal" aria-hidden="true">
     <div class="auth-modal-backdrop" data-auth-close></div>
     <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
-      <button type="button" class="auth-modal-close" data-auth-close aria-label="Close">x</button>
+      <button type="button" class="auth-modal-close" data-auth-close aria-label="Close">&times;</button>
       <h2 id="registerModalTitle" class="auth-modal-title">Sign up</h2>
       <p class="auth-modal-lead">Create your CityEvents account.</p>
 
-      <div class="auth-modal-error hidden" id="registerModalError"></div>
+      <div class="auth-modal-error" id="registerModalError" hidden></div>
 
       <form id="registerModalForm" class="auth-modal-form" method="post" action="<?= $base ?>/register">
         <label class="auth-modal-label" for="registerModalName">Name</label>
@@ -84,7 +100,7 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
 
       <p class="auth-modal-lead">
         Already have an account?
-        <button type="button" class="btn-outline js-switch-to-login">Log in</button>
+        <button type="button" class="auth-modal-switch js-switch-to-login">Log in</button>
       </p>
     </div>
   </div>
@@ -95,6 +111,6 @@ $enableLoginModal = $enableLoginModal && !Auth::check();
     <script src="<?= htmlspecialchars($script) ?>" defer></script>
   <?php endforeach; ?>
 <?php endif; ?>
-<script src="<?= $base ?>/assets/js/script.js"></script>
+<script src="<?= htmlspecialchars($base, ENT_QUOTES, "UTF-8") ?>/assets/js/script.js?v=<?= htmlspecialchars($_ceScriptVer, ENT_QUOTES, "UTF-8") ?>"></script>
 </body>
 </html>

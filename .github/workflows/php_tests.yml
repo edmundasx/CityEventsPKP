@@ -1,0 +1,67 @@
+name: PHP Integration Tests
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - feature-*
+      - feature/**
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: php-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    name: Run PHPUnit Tests
+    runs-on: ubuntu-latest
+    env:
+      CITYEVENTS_TEST_DB_HOST: 127.0.0.1
+      CITYEVENTS_TEST_DB_PORT: 3306
+      CITYEVENTS_TEST_DB_NAME: cityevents_admin_panel_test
+      CITYEVENTS_TEST_DB_USER: root
+      CITYEVENTS_TEST_DB_PASSWORD: root
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: cityevents
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_mysql, mbstring
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Create Tables from Schema
+        run: |
+          mysql -h 127.0.0.1 -u root -proot cityevents < database/cityevents.sql
+      - name: Run Integration Tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_NAME: cityevents
+          DB_USER: root
+          DB_PASS: root
+        run: ./vendor/bin/phpunit --group integration

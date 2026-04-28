@@ -5,30 +5,27 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Support\AdminEventModerationRules;
 
-function assertTrue(bool $condition, string $message): void
-{
+$assertTrue = static function (bool $condition, string $message): void {
     if (!$condition) {
         throw new RuntimeException($message);
     }
-}
+};
 
-function assertFalse(bool $condition, string $message): void
-{
-    assertTrue(!$condition, $message);
-}
+$assertFalse = static function (bool $condition, string $message) use ($assertTrue): void {
+    $assertTrue(!$condition, $message);
+};
 
 // CPG-70: tik laukiantis renginys gali buti patvirtintas.
-assertTrue(
+$assertTrue(
     AdminEventModerationRules::canApplyAction('pending', 'approve'),
     'Pending event should be approvable.',
 );
-assertFalse(
+$assertFalse(
     AdminEventModerationRules::canApplyAction('approved', 'approve'),
     'Approved event should not be approvable again.',
 );
-assertFalse(
+$assertFalse(
     AdminEventModerationRules::canApplyAction('rejected', 'approve'),
     'Rejected event should not be approvable directly.',
 );
 
-echo "AdminEventModerationRulesTest passed.\n";

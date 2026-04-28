@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $profile = is_array($profile ?? null) ? $profile : [];
 $flashSuccess = $flashSuccess ?? null;
 $flashError = $flashError ?? null;

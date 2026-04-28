@@ -15,11 +15,11 @@ final class Db
             return self::$pdo;
         }
 
-        // Put real credentials here or load from config/env
-        $host = "127.0.0.1";
-        $db = "cityevents";
-        $user = "root";
-        $pass = "";
+        $host = getenv('DB_HOST') ?: "127.0.0.1";
+        $db   = getenv('DB_NAME') ?: "cityevents";
+        $user = getenv('DB_USER') ?: "root";
+        $pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : "";
+
         $dsn = "mysql:host={$host};dbname={$db};charset=utf8mb4";
 
         self::$pdo = new PDO($dsn, $user, $pass, [
