@@ -24,6 +24,12 @@ jobs:
   phpunit:
     name: Run PHPUnit Tests
     runs-on: ubuntu-latest
+    env:
+      CITYEVENTS_TEST_DB_HOST: 127.0.0.1
+      CITYEVENTS_TEST_DB_PORT: 3306
+      CITYEVENTS_TEST_DB_NAME: cityevents_admin_panel_test
+      CITYEVENTS_TEST_DB_USER: root
+      CITYEVENTS_TEST_DB_PASSWORD: root
 
     services:
       mysql:
