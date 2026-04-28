@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/AdminPanelTestBootstrap.php';
+require_once __DIR__ . '/AdminPanelTestBootstrap.php';
 
 // Integracinis testas: tikrina validacijos scenarijų,
 // kai admin bando atmesti renginį be priežasties.
@@ -45,4 +45,3 @@ $event = fetchEventRecord($pdo, 101);
 assertSame('pending', $event['status'], 'Event status should stay pending.');
 assertSame(null, $event['rejection_reason'], 'Reject reason should remain empty.');
 
-echo "AdminPanelRejectValidationIntegrationTest passed.\n";

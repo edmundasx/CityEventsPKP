@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/AdminPanelTestBootstrap.php';
+require_once __DIR__ . '/AdminPanelTestBootstrap.php';
 
 // Integracinis testas: tikrina pilną admin atmetimo kelią
 // nuo maršruto ir controllerio iki įrašo pakeitimo DB bei JSON atsako.
@@ -44,4 +44,3 @@ assertSame(
     'Reject reason should be persisted.',
 );
 
-echo "AdminPanelRejectEventIntegrationTest passed.\n";
